@@ -90,6 +90,7 @@ Rect temp, tempBullet;
 boolean gameOver = false, alreadyShot;
 int x, y, score = -1;
 color trackColour;
+PImage spaceship, asteroid, bullet;
 Capture cam;
 void setup(){
   size(640, 480);
@@ -98,6 +99,10 @@ void setup(){
   background(255);
   obstacles.add(new Rect());
   trackColour = color(255, 255, 255);
+  bullet = loadImage("bullet.png");
+  asteroid  = loadImage("asteroid1.png");
+  spaceship = loadImage("spaceship.png"); //load the spaceship image
+  player.img[0] = spaceship; //attach it to the player object 
 }
 
 void captureEvent(Capture cam){
@@ -144,8 +149,14 @@ void draw() {
   // This threshold of 10 is arbitrary and you can adjust this number depending on how accurate you require the tracking to be.
   if (worldRecord < 10) { 
     // Draw a circle at the tracked pixel
-    player.move(width-closestX,closestY); //move the player, the image is mirrored so flip the x value in which the player rect moves
-    player.drawRect(); //display the player
+    
+    //UNCOMMENT FOR ACTUAL PROJECT
+    //player.move(width-closestX,closestY); //move the player, the image is mirrored so flip the x value in which the player rect moves
+    
+    //FOR TESTING
+    player.move(mouseX,mouseY);
+    //player.drawRect(); //display the player
+    player.drawImg();
   }
   
   if(score==-1){score=0;}
@@ -155,6 +166,7 @@ void draw() {
   }
   for (int i = 0; i<obstacles.size(); i++) { //loop through list of obstacles
     temp = obstacles.get(i);
+    temp.img[0] = asteroid;
     temp.move(false); //move obstacle
 
     if (temp.collideRect(player)) { //check for collision with player
@@ -179,7 +191,7 @@ void draw() {
     if (temp.y>height) { //if obstacle is off screen remove it from obstacle list
       obstacles.remove(i);
     }
-    temp.drawRect(); //draw the obstacle
+    temp.drawImg(); //draw the obstacle
   }
   
   
@@ -193,8 +205,9 @@ void draw() {
   if(!bullets.isEmpty()){
     for(int i=0; i<bullets.size(); i++){
       tempBullet = bullets.get(i);
+      tempBullet.img[0] = bullet;
       tempBullet.move(true);
-      tempBullet.drawRect();
+      tempBullet.drawImg();
       
       if(tempBullet.y<0){
         bullets.remove(tempBullet);
