@@ -25,7 +25,7 @@ class Rect {  //constructing a class for the player and obstacle objects
 
   Rect() { //generic construction, assigns random values to each attribute, used for obstacle objects
     this.y = 0;
-    this.x = (int)random(50, 400);
+    this.x = (int)random(0, width);
     this.w = 10;
     this.h = 10;
     this.rgb[0] = 255;
@@ -197,7 +197,11 @@ void draw() {
   
   if(mousePressed){
     if(alreadyShot == false){
-      bullets.add(new Rect(width-closestX, closestY, 5, 5, 0, 0, 0));
+      // UNCOMMENT FOR PRODUCTION
+      //bullets.add(new Rect(width-closestX, closestY, 5, 5, 0, 0, 0));
+      
+      //TESTING
+      bullets.add(new Rect(mouseX, mouseY, 5, 5, 0, 0, 0));
       alreadyShot = true;
     }
   }  
