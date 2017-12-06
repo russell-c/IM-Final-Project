@@ -90,7 +90,8 @@ Player player = new Player(width/2, height, 20, 20, 0, 0, 0);
 Rect temp; 
 Bullet tempBullet;
 boolean gameOver = false, alreadyShot;
-int x, y, score = -1;
+int x, y, score = -1, currentDiff;
+int[] difficulty = {45, 30, 15};
 color trackColour;
 PImage spaceship, asteroid, bullet;
 
@@ -115,6 +116,14 @@ void captureEvent(Capture cam){
 void draw() {
   cam.loadPixels();
   background(255);
+  
+  if(score<40){
+    currentDiff = difficulty[0];
+  }else if(score>60 && score < 120){
+    currentDiff = difficulty[1];
+  }else if(score>120){
+    currentDiff = difficulty[2];
+  }
   
   float worldRecord = 500; 
 
@@ -187,7 +196,7 @@ void draw() {
       }
     }
 
-    if (temp.count==45) { //if count reaches this value (i.e. has been on screen for 45 frames) add a new obstacle
+    if (temp.count==currentDiff) { //if count reaches this value (i.e. has been on screen for 45 frames) add a new obstacle
       obstacles.add(new Rect());
     }
 
