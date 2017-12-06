@@ -10,24 +10,12 @@ class Rect {  //constructing a class for the player and obstacle objects
   int count;
   PImage[] img = new PImage[2];
   int i = 0;
-
-  Rect(int x, int y, int w, int h, int r, int g, int b) { //specific constructor, mainly used to specify the player's object attributes
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.rgb[0] = r;
-    this.rgb[1] = g;
-    this.rgb[2] = b;
-    this.velocity = 2;
-    this.count = 0;
-  }
-
+  
   Rect() { //generic construction, assigns random values to each attribute, used for obstacle objects
     this.y = 0;
     this.x = (int)random(0, width);
-    this.w = 10;
-    this.h = 10;
+    this.w = 30;
+    this.h = 30;
     this.rgb[0] = 255;
     this.rgb[1] = 0;
     this.rgb[2] = 0;
@@ -35,40 +23,15 @@ class Rect {  //constructing a class for the player and obstacle objects
     this.count = 0;
   }
 
-  void move(boolean isBullet) { //generic move that updates the y attribute, used for obstacle objects, note: y pos is constant
-    if(isBullet){
-      y -= velocity;
-    } else {
+  void move() { //generic move that updates the y attribute, used for obstacle objects, note: y pos is constant
       y += velocity;
-    }
-    
     count++; //each update to position increments count
   }
 
-  void move(int moveX, int moveY) { //function that specifies where exactly the object should go on screen, used for player's object
-    x = moveX;
-    y = moveY;
-  }
-
-  boolean collideRect(Rect other) {
-    if (this.x+this.w >= other.x && this.x+this.w <= other.x+other.w) { //if inside the obstacle bounds coming from the left side
-      if (this.y <= other.y+other.h && this.y >= other.y) { //if inside the obstacle bounds coming from the bottom
-        return true;
-      }
-      if (this.y+this.h >= other.y && this.y+this.h <= other.y+other.h) { //if inside the obstacle bounds coming from the top
-        return true;
-      }
+  boolean collideRect(Rect other){
+    if( ((other.x + other.w) >= this.x) && (other.x <= (this.x+this.w)) && ( (other.y + other.h) >= this.y) && (other.y <= (this.y+this.h)) ){
+      return true;
     }
-
-    if (this.x <= other.x+other.w && this.x >= other.x) { //if inside the obstacle bound coming from the right side
-      if (this.y <= other.y+other.h && this.y >= other.y) { //if inside the obstacle bounds coming from the bottom
-        return true;
-      }
-      if (this.y+this.h >= other.y && this.y+this.h <= other.y+other.h) { //if inside the obstacle bounds coming from the top
-        return true;
-      }
-    }
-
     return false;
   }
 
@@ -79,18 +42,58 @@ class Rect {  //constructing a class for the player and obstacle objects
   }
   
   void drawImg(){
-    image(this.img[this.i], x-10, y-10, 30, 30); //draw specified image to screen
+    image(this.img[this.i], x-10, y-10, w, h); //draw specified image to screen
+  }
+}
+
+class Player extends Rect {
+  
+  Player(int x, int y, int w, int h, int r, int g, int b) { //specific constructor, mainly used to specify the player's object attributes
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.rgb[0] = r;
+    this.rgb[1] = g;
+    this.rgb[2] = b;
+    this.velocity = 2;
+    this.count = 0;
+  }
+  
+  void move(int moveX, int moveY) { //function that specifies where exactly the object should go on screen, used for player's object
+    x = moveX;
+    y = moveY;
+  }
+  
+}
+
+class Bullet extends Rect {
+
+  Bullet(int x, int y) { //specific constructor, mainly used to specify the player's object attributes
+    this.x = x;
+    this.y = y;
+    this.w = 25;
+    this.h = 25;
+    this.velocity = 2;
+    this.count = 0;
+  }
+  
+  void move() { //generic move that updates the y attribute, used for obstacle objects, note: y pos is constant
+    y -= velocity;
+    count++; //each update to position increments count
   }
 }
 
 ArrayList<Rect> obstacles = new ArrayList<Rect>();
-ArrayList<Rect> bullets = new ArrayList<Rect>();
-Rect player = new Rect(width/2, height, 20, 20, 0, 0, 0);
-Rect temp, tempBullet;
+ArrayList<Bullet> bullets = new ArrayList<Bullet>();
+Player player = new Player(width/2, height, 20, 20, 0, 0, 0);
+Rect temp; 
+Bullet tempBullet;
 boolean gameOver = false, alreadyShot;
 int x, y, score = -1;
 color trackColour;
 PImage spaceship, asteroid, bullet;
+
 Capture cam;
 void setup(){
   size(640, 480);
@@ -167,7 +170,7 @@ void draw() {
   for (int i = 0; i<obstacles.size(); i++) { //loop through list of obstacles
     temp = obstacles.get(i);
     temp.img[0] = asteroid;
-    temp.move(false); //move obstacle
+    temp.move(); //move obstacle
 
     if (temp.collideRect(player)) { //check for collision with player
       gameOver = true;
@@ -198,10 +201,10 @@ void draw() {
   if(mousePressed){
     if(alreadyShot == false){
       // UNCOMMENT FOR PRODUCTION
-      //bullets.add(new Rect(width-closestX, closestY, 5, 5, 0, 0, 0));
+      //bullets.add(new Bullet(width-closestX, closestY-25));
       
       //TESTING
-      bullets.add(new Rect(mouseX, mouseY, 5, 5, 0, 0, 0));
+      bullets.add(new Bullet(mouseX, mouseY-25));
       alreadyShot = true;
     }
   }  
@@ -210,7 +213,7 @@ void draw() {
     for(int i=0; i<bullets.size(); i++){
       tempBullet = bullets.get(i);
       tempBullet.img[0] = bullet;
-      tempBullet.move(true);
+      tempBullet.move();
       tempBullet.drawImg();
       
       if(tempBullet.y<0){
