@@ -94,6 +94,8 @@ int x, y, score = -1, currentDiff;
 int[] difficulty = {45, 30, 15};
 color trackColour;
 PImage spaceship, asteroid, bullet;
+PImage[] bgArr = new PImage[5];
+int bg = 0, bgCount = 0;
 
 Capture cam;
 void setup(){
@@ -107,6 +109,10 @@ void setup(){
   asteroid  = loadImage("asteroid1.png");
   spaceship = loadImage("spaceship.png"); //load the spaceship image
   player.img[0] = spaceship; //attach it to the player object 
+  for (int i = 0; i < 5; i++) {
+    String imageName = "frame_" + nf(i, 1) + "_delay-0.25s.gif";
+    bgArr[i] = loadImage(imageName);
+  }
 }
 
 void captureEvent(Capture cam){
@@ -115,7 +121,12 @@ void captureEvent(Capture cam){
 
 void draw() {
   cam.loadPixels();
-  background(255);
+  background(bgArr[bg]);
+  bgCount++;
+  if(bgCount>=10){
+    bg = (bg+1)%5;
+    bgCount=0;
+  }
   
   if(score<40){
     currentDiff = difficulty[0];
@@ -231,7 +242,7 @@ void draw() {
     }
   }
   
-  fill(0);
+  fill(255);
   textSize(16);
   text("Score: ", 0, 15); //display score in top left
   text(score, 48, 15);
@@ -240,8 +251,8 @@ void draw() {
   if(gameOver == true){ //if a collision happened
     obstacles.clear(); //clear obstacle list entirely
     bullets.clear();
-    background(255);
-    fill(0);
+    background(bgArr[bg]);
+    fill(255);
     textSize(26);
     text("Game Over", 190, 240); //signifiers
     
