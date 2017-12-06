@@ -8,8 +8,9 @@ class Rect {  //constructing a class for the player and obstacle objects
   int[] rgb = new int[3];
   int velocity;
   int count;
-  PImage[] img = new PImage[2];
-  int i = 0;
+  PImage img;
+  boolean imgSet = false;
+
   
   Rect() { //generic construction, assigns random values to each attribute, used for obstacle objects
     this.y = 0;
@@ -42,7 +43,7 @@ class Rect {  //constructing a class for the player and obstacle objects
   }
   
   void drawImg(){
-    image(this.img[this.i], x-10, y-10, w, h); //draw specified image to screen
+    image(this.img, x-10, y-10, w, h); //draw specified image to screen
   }
 }
 
@@ -95,6 +96,7 @@ int[] difficulty = {45, 30, 15};
 color trackColour;
 PImage spaceship, asteroid, bullet;
 PImage[] bgArr = new PImage[5];
+PImage[] asteroidArr = new PImage[4];
 int bg = 0, bgCount = 0;
 
 Capture cam;
@@ -108,10 +110,15 @@ void setup(){
   bullet = loadImage("bullet.png");
   asteroid  = loadImage("asteroid1.png");
   spaceship = loadImage("spaceship.png"); //load the spaceship image
-  player.img[0] = spaceship; //attach it to the player object 
+  player.img = spaceship; //attach it to the player object 
   for (int i = 0; i < 5; i++) {
     String imageName = "frame_" + nf(i, 1) + "_delay-0.25s.gif";
     bgArr[i] = loadImage(imageName);
+  }
+  
+  for (int i = 0; i < 4; i++) {
+    String imageName = "asteroid" + nf(i+1, 1) + ".png";
+    asteroidArr[i] = loadImage(imageName);
   }
 }
 
@@ -189,7 +196,10 @@ void draw() {
   }
   for (int i = 0; i<obstacles.size(); i++) { //loop through list of obstacles
     temp = obstacles.get(i);
-    temp.img[0] = asteroid;
+    if(temp.imgSet == false){
+      temp.img = asteroidArr[(int) random(0, 4)];
+      temp.imgSet = true;
+    }
     temp.move(); //move obstacle
 
     if (temp.collideRect(player)) { //check for collision with player
@@ -232,7 +242,7 @@ void draw() {
   if(!bullets.isEmpty()){
     for(int i=0; i<bullets.size(); i++){
       tempBullet = bullets.get(i);
-      tempBullet.img[0] = bullet;
+      tempBullet.img = bullet;
       tempBullet.move();
       tempBullet.drawImg();
       
