@@ -1,4 +1,6 @@
 import processing.video.*;
+import processing.sound.*;
+
 
 class Rect {  //constructing a class for the player and obstacle objects
   int x;
@@ -152,11 +154,19 @@ class Explosion {
     this.explosionIndex = 0;
     this.frame = 0;
   }
+<<<<<<< HEAD
 
   void animate() {
     if (shouldAnimate) {
       if ((frame%3)==0) { //every 2 frames in processing draw a new frame of the explosion gif
         image(this.explosionSet[explosionIndex], this.x, this.y, 40, 40);
+=======
+  
+  void animate(){
+    if(shouldAnimate){
+      if((frame%3)==0){ //every 2 frames in processing draw a new frame of the explosion gif
+        image(this.explosionSet[explosionIndex],this.x,this.y,40,40);
+>>>>>>> 2d76fa0373ee4ce89799647434d36b2f86c229e9
         explosionIndex++;
       }
       frame++;
@@ -174,7 +184,11 @@ Player player = new Player(width/2, height, 20, 20, 0, 0, 0);
 Asteroid temp; 
 Bullet tempBullet;
 Explosion tempExplosion;
+<<<<<<< HEAD
 Earth earth = new Earth(450,225);
+=======
+SoundFile explosionSound, bgMusic, laser;
+>>>>>>> 2d76fa0373ee4ce89799647434d36b2f86c229e9
 
 boolean gameOver = false, alreadyShot;
 int x, y, score = -1, currentDiff;
@@ -220,6 +234,15 @@ void setup() {
     imageName = "explosion_"+nf(i, 1)+"_delay-0.1s.png";
     explosionArr[i] = loadImage(imageName);
   }
+  
+  explosionSound = new SoundFile(this, "boom.wav");
+  explosionSound.rate(0.5);
+  
+  bgMusic = new SoundFile(this, "bgSong.wav");
+  bgMusic.amp(0.5); //sets the volume, accepts values between 0 and 1
+  bgMusic.loop();
+  
+  laser = new SoundFile(this, "laser.wav");
 }
 
 void captureEvent(Capture cam) {
@@ -227,6 +250,7 @@ void captureEvent(Capture cam) {
 }
 
 void draw() {
+  
   cam.loadPixels();
   background(bgArr[bg]);
   bgCount++;
@@ -309,6 +333,7 @@ void draw() {
       tempExplosion = new Explosion(player.x, player.y);
       tempExplosion.startAnimating();
       explosions.add(tempExplosion);
+      explosionSound.play();
       gameOver = true;
     }
     
@@ -321,7 +346,11 @@ void draw() {
           tempExplosion = new Explosion(temp.x-10, temp.y-10); //create the explosion at the point the bullet hits the object
           tempExplosion.startAnimating(); //set the shouldAnimate property of the explosion to true so that it can start animating afterwards
           explosions.add(tempExplosion); //add each explosion to a list, they will be animated later
+<<<<<<< HEAD
 
+=======
+          explosionSound.play();
+>>>>>>> 2d76fa0373ee4ce89799647434d36b2f86c229e9
           bullets.remove(tempBullet);
           obstacles.remove(temp);
           score++;
@@ -364,6 +393,7 @@ void draw() {
 
       //TESTING
       bullets.add(new Bullet(mouseX, mouseY-25));
+      laser.play();
       alreadyShot = true;
     }
   }  
