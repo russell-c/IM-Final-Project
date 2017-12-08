@@ -85,6 +85,48 @@ class Bullet extends Rect {
   }
 }
 
+class Explosion{
+  
+  int x = 0, y=0, frame = 0, explosionIndex = 0;
+  PImage[] explosionSet = new PImage[15];
+  boolean shouldAnimate = false;
+  
+  Explosion(int x, int y){
+    this.x = x;
+    this.y = y;
+  }
+  
+  void addImages(PImage[] images){
+    for(int i = 0;i<this.explosionSet.length;i++){
+      explosionSet[i] = images[i];
+    }
+  }
+  
+  void startAnimating(){
+    this.shouldAnimate = true;
+  }
+  
+  void endAnimating(){
+    this.shouldAnimate = false;
+    explosionIndex = 0;
+    frame = 0;
+  }
+  
+  void animate(){
+    if(shouldAnimate){
+      if((frame%2)==0){
+        image(this.explosionSet[explosionIndex],this.x,this.y,40,40);
+        explosionIndex++;
+      }
+      frame++;
+      if(frame>=this.explosionSet.length){
+        this.endAnimating();
+      }
+    }
+    
+  }
+}
+
 ArrayList<Rect> obstacles = new ArrayList<Rect>();
 ArrayList<Bullet> bullets = new ArrayList<Bullet>();
 Player player = new Player(width/2, height, 20, 20, 0, 0, 0);
@@ -97,6 +139,7 @@ color trackColour;
 PImage spaceship, asteroid, bullet;
 PImage[] bgArr = new PImage[5];
 PImage[] asteroidArr = new PImage[4];
+PImage[] explosionArr = new PImage[8];
 int bg = 0, bgCount = 0;
 
 Capture cam;
@@ -111,14 +154,22 @@ void setup(){
   asteroid  = loadImage("asteroid1.png");
   spaceship = loadImage("spaceship.png"); //load the spaceship image
   player.img = spaceship; //attach it to the player object 
+  
+  String imageName;
+  
   for (int i = 0; i < 5; i++) {
-    String imageName = "frame_" + nf(i, 1) + "_delay-0.25s.gif";
+    imageName = "background_" + nf(i, 1) + "_delay-0.25s.gif";
     bgArr[i] = loadImage(imageName);
   }
   
   for (int i = 0; i < 4; i++) {
-    String imageName = "asteroid" + nf(i+1, 1) + ".png";
+    imageName = "asteroid" + nf(i+1, 1) + ".png";
     asteroidArr[i] = loadImage(imageName);
+  }
+  
+  for(int i = 0;i<explosionArr.length;i++){
+    imageName = "explosion_"+nf(i,1)+"_delay-0.1s.gif";
+    explosionArr[i] = loadImage(imageName);
   }
 }
 
