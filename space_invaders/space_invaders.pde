@@ -55,9 +55,10 @@ class Rect {  //constructing a class for the player and obstacle objects
 
 class Earth extends Rect {
   
-  int damageTaken = 0;
+  int damageTaken;
   
   Earth(int w, int h){
+    damageTaken = 0;
     this.x = 0;
     this.y = height+h;
     this.w = w-30;
@@ -189,8 +190,10 @@ PImage spaceshipImg, asteroidImg, bulletImg, earthImg;
 PImage[] bgArr = new PImage[5];
 PImage[] asteroidArr = new PImage[4];
 PImage[] explosionArr = new PImage[8];
-
-
+color dangerColor = color(242,33,40), healthyColor = color(39,216,77);
+color healthBarColor = healthyColor;
+float healthBarWidth = 200, tooMuchDamageTaken = 100;
+float currentHealth = 0;
 int bg = 0, bgCount = 0;
 
 Capture cam;
@@ -249,6 +252,15 @@ void draw() {
     bg = (bg+1)%5;
     bgCount=0;
   }
+  
+  currentHealth = ((tooMuchDamageTaken - earth.damageTaken)/100) * healthBarWidth;
+  println(currentHealth);
+  
+  fill(52,52,52);
+  rect(width-(healthBarWidth+20),20,healthBarWidth,30);
+  fill(healthBarColor);
+  rect(width-(healthBarWidth+20),20,currentHealth,30);
+  noFill();
   
   earth.drawImg();
 
@@ -353,7 +365,7 @@ void draw() {
       explosions.add(tempExplosion);
       obstacles.remove(temp);
     }
-   
+    
 
     if (temp.count==currentDiff) { //if count reaches this value (i.e. has been on screen for 45 frames) add a new obstacle
       obstacles.add(new Asteroid());
@@ -363,6 +375,10 @@ void draw() {
       obstacles.remove(i);
     }
     temp.drawImg(); //draw the obstacle
+  }
+  
+  if(earth.damageTaken >= 50){
+      healthBarColor = dangerColor;
   }
 
   //animate all the explosions that were added to the explosions list
