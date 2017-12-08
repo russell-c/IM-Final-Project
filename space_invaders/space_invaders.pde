@@ -5,7 +5,6 @@ class Rect {  //constructing a class for the player and obstacle objects
   int y;
   int w;
   int h;
-  int[] rgb = new int[3];
   int velocity;
   int count;
   PImage img;
@@ -17,9 +16,6 @@ class Rect {  //constructing a class for the player and obstacle objects
     this.x = (int)random(0, width);
     this.w = 25;
     this.h = 25;
-    this.rgb[0] = 255;
-    this.rgb[1] = 0;
-    this.rgb[2] = 0;
     this.velocity = (int)random(1, 3);
     this.count = 0;
   }
@@ -37,19 +33,62 @@ class Rect {  //constructing a class for the player and obstacle objects
   }
 
   void drawRect() { //draw the object to the screen
-    fill(rgb[0], rgb[1], rgb[2]);
     rect(x, y, w, h);
     count++;
   }
 
+  void setImage(PImage img){
+    this.img = img;
+    this.imgSet = true;
+  }
+
   void drawImg() {
-    image(this.img, this.x-10, this.y-15, w, h); //draw specified image to screen
+    if(this.imgSet){
+      image(this.img, this.x-10, this.y-15, w, h); //draw specified image to screen
+    } else {
+      print("The image for this object is not set");
+    }
+  }
+}
+
+class Earth extends Rect {
+  
+  int damageTaken = 0;
+  
+  Earth(int w, int h){
+    this.x = 0;
+    this.y = height+h;
+    this.w = w-30;
+    this.h = h-70;
+  }
+  
+  void drawImg(){
+    if(this.imgSet){
+      image(this.img,this.x,this.y,this.w+20,this.h+70);
+    } else {
+      print("Earth object image is not set");
+    }
+  }
+  
+  void takeDamage(int damage){
+    this.damageTaken += damage;
   }
 }
 
 class Asteroid extends Rect {
+  
+  int damage = 0;
+  
+  Asteroid(){
+    damage = (int) random(5,15);
+  }
+  
   void drawImg(){
-    image(this.img, x-20, y-15, w+20, h+10); //draw specified image to screen
+    if(this.imgSet){
+      image(this.img, x-20, y-15, w+20, h+10); //draw specified image to screen
+    } else {
+      print("The image for this object is not set");
+    }
   }
 }
 
@@ -60,9 +99,6 @@ class Player extends Rect {
     this.y = y;
     this.w = w;
     this.h = h;
-    this.rgb[0] = r;
-    this.rgb[1] = g;
-    this.rgb[2] = b;
     this.velocity = 2;
     this.count = 0;
   }
@@ -138,12 +174,13 @@ Player player = new Player(width/2, height, 20, 20, 0, 0, 0);
 Asteroid temp; 
 Bullet tempBullet;
 Explosion tempExplosion;
+Earth earth = new Earth(450,225);
 
 boolean gameOver = false, alreadyShot;
 int x, y, score = -1, currentDiff;
 int[] difficulty = {45, 30, 15};
 color trackColour;
-PImage spaceship, asteroid, bullet;
+PImage spaceshipImg, asteroidImg, bulletImg, earthImg;
 PImage[] bgArr = new PImage[5];
 PImage[] asteroidArr = new PImage[4];
 PImage[] explosionArr = new PImage[8];
@@ -159,11 +196,14 @@ void setup() {
   background(255);
   obstacles.add(new Asteroid());
   trackColour = color(255, 255, 255);
-  bullet = loadImage("bullet.png");
-  asteroid  = loadImage("asteroid1.png");
-  spaceship = loadImage("spaceship.png"); //load the spaceship image
-  player.img = spaceship; //attach it to the player object 
-
+  bulletImg = loadImage("bullet.png");
+  asteroidImg  = loadImage("asteroid1.png");
+  spaceshipImg = loadImage("spaceship.png"); //load the spaceship image
+  player.setImage(spaceshipImg); //attach it to the player object 
+  
+  earthImg = loadImage("earth2.png");
+  earth.setImage(earthImg);
+  
   String imageName;
 
   for (int i = 0; i < 5; i++) {
@@ -194,6 +234,8 @@ void draw() {
     bg = (bg+1)%5;
     bgCount=0;
   }
+  
+  earth.drawImg();
 
   if (score<40) {
     currentDiff = difficulty[0];
@@ -259,18 +301,17 @@ void draw() {
   for (int i = 0; i<obstacles.size(); i++) { //loop through list of obstacles
     temp = obstacles.get(i);
     if (temp.imgSet == false) {
-      temp.img = asteroidArr[(int) random(0, 4)];
-      temp.imgSet = true;
+      temp.setImage(asteroidArr[(int) random(0, 4)]);
     }
     temp.move(); //move obstacle
 
-    if (temp.collideRect(player)) { //check for collision with player
+    if (temp.collideRect(player) || earth.damageTaken >= 100) { //check for collision with player
       tempExplosion = new Explosion(player.x, player.y);
       tempExplosion.startAnimating();
       explosions.add(tempExplosion);
       gameOver = true;
     }
-
+    
     if (!bullets.isEmpty()) {
       for (int c = 0; c<bullets.size(); c++) {
         tempBullet = bullets.get(c);
@@ -287,6 +328,18 @@ void draw() {
         }
       }
     }
+    
+    if(temp.collideRect(earth)){
+      earth.takeDamage(temp.damage);
+      tempExplosion = new Explosion(temp.x-10,temp.y-10);
+      tempExplosion.startAnimating();
+      explosions.add(tempExplosion);
+      obstacles.remove(temp);
+    }
+    
+    //if(earth.damageTaken >= 100){
+    //  gameOver = true;
+    //}
 
     if (temp.count==currentDiff) { //if count reaches this value (i.e. has been on screen for 45 frames) add a new obstacle
       obstacles.add(new Asteroid());
@@ -318,7 +371,7 @@ void draw() {
   if (!bullets.isEmpty()) {
     for (int i=0; i<bullets.size(); i++) {
       tempBullet = bullets.get(i);
-      tempBullet.img = bullet;
+      tempBullet.setImage(bulletImg);
       tempBullet.move();
       tempBullet.drawImg();
 
@@ -335,6 +388,7 @@ void draw() {
 
 
   if (gameOver == true) { //if a collision happened
+    earth.damageTaken = 0;
     obstacles.clear(); //clear obstacle list entirely
     bullets.clear();
     background(bgArr[bg]);
