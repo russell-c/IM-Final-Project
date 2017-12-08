@@ -1,4 +1,6 @@
 import processing.video.*;
+import processing.sound.*;
+
 
 class Rect {  //constructing a class for the player and obstacle objects
   int x;
@@ -117,7 +119,6 @@ class Explosion{
     if(shouldAnimate){
       if((frame%3)==0){ //every 2 frames in processing draw a new frame of the explosion gif
         image(this.explosionSet[explosionIndex],this.x,this.y,40,40);
-        println(explosionIndex);
         explosionIndex++;
       }
       frame++;
@@ -136,6 +137,7 @@ Player player = new Player(width/2, height, 20, 20, 0, 0, 0);
 Rect temp; 
 Bullet tempBullet;
 Explosion tempExplosion;
+SoundFile explosionSound, bgMusic, laser;
 
 boolean gameOver = false, alreadyShot;
 int x, y, score = -1, currentDiff;
@@ -178,6 +180,15 @@ void setup(){
     imageName = "explosion_"+nf(i,1)+"_delay-0.1s.gif";
     explosionArr[i] = loadImage(imageName);
   }
+  
+  explosionSound = new SoundFile(this, "boom.wav");
+  explosionSound.rate(0.5);
+  
+  bgMusic = new SoundFile(this, "bgSong.wav");
+  bgMusic.amp(0.5);
+  bgMusic.loop();
+  
+  laser = new SoundFile(this, "laser.wav");
 }
 
 void captureEvent(Capture cam){
@@ -185,6 +196,7 @@ void captureEvent(Capture cam){
 }
 
 void draw() {
+  
   cam.loadPixels();
   background(bgArr[bg]);
   bgCount++;
@@ -264,6 +276,7 @@ void draw() {
       tempExplosion = new Explosion(player.x,player.y);
       tempExplosion.startAnimating();
       explosions.add(tempExplosion);
+      explosionSound.play();
       gameOver = true;
     }
     
@@ -276,7 +289,7 @@ void draw() {
           tempExplosion = new Explosion(temp.x-10,temp.y-10); //create the explosion at the point the bullet hits the object
           tempExplosion.startAnimating(); //set the shouldAnimate property of the explosion to true so that it can start animating afterwards
           explosions.add(tempExplosion); //add each explosion to a list, they will be animated later
-          
+          explosionSound.play();
           bullets.remove(tempBullet);
           obstacles.remove(temp);
           score++;
@@ -307,6 +320,7 @@ void draw() {
       
       //TESTING
       bullets.add(new Bullet(mouseX, mouseY-25));
+      laser.play();
       alreadyShot = true;
     }
   }  
