@@ -185,7 +185,7 @@ void setup(){
   explosionSound.rate(0.5);
   
   bgMusic = new SoundFile(this, "bgSong.wav");
-  bgMusic.amp(0.5);
+  bgMusic.amp(0.5); //sets the volume, accepts values between 0 and 1
   bgMusic.loop();
   
   laser = new SoundFile(this, "laser.wav");
