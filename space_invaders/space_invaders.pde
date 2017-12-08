@@ -56,6 +56,9 @@ class Rect {  //constructing a class for the player and obstacle objects
 class Earth extends Rect {
   
   int damageTaken;
+  int frame = 0;
+  int imageIndex = 0;
+  PImage[] imageArr = new PImage[40];
   
   Earth(int w, int h){
     damageTaken = 0;
@@ -65,12 +68,24 @@ class Earth extends Rect {
     this.h = h-70;
   }
   
-  void drawImg(){
+  void drawImages(){
     if(this.imgSet){
-      image(this.img,this.x,this.y,this.w+20,this.h+70);
+      image(this.imageArr[imageIndex],this.x,this.y-70,this.w,this.h);
+      if(frame>=15){
+        imageIndex = (imageIndex+1)%imageArr.length;
+        frame = 0;
+      }
+      frame++;
     } else {
       print("Earth object image is not set");
     }
+  }
+  
+  void setImages(PImage[] images){
+    for(int i =0;i<imageArr.length;i++){
+      this.imageArr[i] = images[i];
+    }
+    this.imgSet = true;
   }
   
   void takeDamage(int damage){
@@ -179,22 +194,26 @@ Player player = new Player(width/2, height, 20, 20, 0, 0, 0);
 Asteroid temp; 
 Bullet tempBullet;
 Explosion tempExplosion;
-Earth earth = new Earth(450,225);
-SoundFile explosionSound, bgMusic, laser;
+Earth earth = new Earth(350,333);
+
 
 boolean gameOver = false, alreadyShot;
 int x, y, score = -1, currentDiff;
 int[] difficulty = {45, 30, 15};
 color trackColour;
-PImage spaceshipImg, asteroidImg, bulletImg, earthImg;
+PImage spaceshipImg, bulletImg;
+PImage[] earthImages = new PImage[40];
 PImage[] bgArr = new PImage[5];
 PImage[] asteroidArr = new PImage[4];
 PImage[] explosionArr = new PImage[8];
+PFont font; 
 color dangerColor = color(242,33,40), healthyColor = color(39,216,77);
 color healthBarColor = healthyColor;
 float healthBarWidth = 200, tooMuchDamageTaken = 100;
 float currentHealth = 0;
 int bg = 0, bgCount = 0;
+SoundFile explosionSound, bgMusic, laser;
+
 
 Capture cam;
 void setup() {
@@ -205,22 +224,25 @@ void setup() {
   obstacles.add(new Asteroid());
   trackColour = color(255, 255, 255);
   bulletImg = loadImage("bullet.png");
-  asteroidImg  = loadImage("asteroid1.png");
   spaceshipImg = loadImage("spaceship.png"); //load the spaceship image
   player.setImage(spaceshipImg); //attach it to the player object 
-  
-  earthImg = loadImage("earth2.png");
-  earth.setImage(earthImg);
-  
+ 
   String imageName;
 
+  for(int i=0;i<earth.imageArr.length;i++){
+    imageName = "rotating_earth_"+nf(i,2)+"_delay-0.3s.png";
+    earthImages[i] = loadImage(imageName);
+  }
+  
+  earth.setImages(earthImages);
+  
   for (int i = 0; i < 5; i++) {
     imageName = "background_" + nf(i, 1) + "_delay-0.25s.gif";
     bgArr[i] = loadImage(imageName);
   }
 
-  for (int i = 0; i < 4; i++) {
-    imageName = "asteroid" + nf(i+1, 1) + ".png";
+  for (int i = 1; i < 5; i++) {
+    imageName = "asteroid"+nf(i,1)+".png";
     asteroidArr[i] = loadImage(imageName);
   }
 
@@ -237,6 +259,7 @@ void setup() {
   bgMusic.loop();
   
   laser = new SoundFile(this, "laser.wav");
+  font = loadFont("HelveticaNeue-48.vlw");
 }
 
 void captureEvent(Capture cam) {
@@ -253,16 +276,26 @@ void draw() {
     bgCount=0;
   }
   
-  currentHealth = ((tooMuchDamageTaken - earth.damageTaken)/100) * healthBarWidth;
-  println(currentHealth);
+  if (score==-1) {
+    score=0;
+  }
   
+  currentHealth = ((tooMuchDamageTaken - earth.damageTaken)/100) * healthBarWidth;
+  
+  fill(255);
+  textFont(font, 15);
+  text("Earth's Health: ",width-(healthBarWidth+130),42);
   fill(52,52,52);
   rect(width-(healthBarWidth+20),20,healthBarWidth,30);
   fill(healthBarColor);
   rect(width-(healthBarWidth+20),20,currentHealth,30);
-  noFill();
+  fill(255);
+  textFont(font, 15);
+  text("Score: ", width-(healthBarWidth+130), 60); //display score in top left
+  textFont(font, 15);
+  text(score, width-(healthBarWidth+80), 60);
   
-  earth.drawImg();
+  earth.drawImages();
 
   if (score<40) {
     currentDiff = difficulty[0];
@@ -318,9 +351,6 @@ void draw() {
     //player.drawRect(); //display the player
     player.drawImg();
 
-  if (score==-1) {
-    score=0;
-  }
 
   if (obstacles.isEmpty()) {
     obstacles.add(new Asteroid());
@@ -344,7 +374,6 @@ void draw() {
       for (int c = 0; c<bullets.size(); c++) {
         tempBullet = bullets.get(c);
         if (temp.collideRect(tempBullet)) {
-
           //create a new explosion object for each collision that occurs
           tempExplosion = new Explosion(temp.x-10, temp.y-10); //create the explosion at the point the bullet hits the object
           tempExplosion.explode = explosionSound;
@@ -412,26 +441,29 @@ void draw() {
     }
   }
 
-  fill(255);
-  textSize(16);
-  text("Score: ", 0, 15); //display score in top left
-  text(score, 48, 15);
-
 
   if (gameOver == true) { //if a collision happened
+    healthBarColor = healthyColor;
     earth.damageTaken = 0;
     obstacles.clear(); //clear obstacle list entirely
     bullets.clear();
     background(bgArr[bg]);
     fill(255);
-    textSize(26);
-    text("Game Over", 190, 240); //signifiers
-
-    textSize(16);
-    text("Score: ", 230, 265);
-    text(score, 278, 265);
-
-    text("Push enter button to play again!", 135, 400); //signifiers everywhere
+    textFont(font, 26);
+    fill(dangerColor);
+    text("Game Over!", width/2-85, height/2-25); //signifiers
+    fill(255);
+    textFont(font, 15);
+    text("Score: ", width/2-40, height/2);
+    fill(healthyColor);
+    text(score, width/2+10, height/2);
+    fill(255);
+   
+    text("Push ", width/2-120, height/2+20); 
+    fill(healthyColor);
+    text("ENTER ",width/2-80, height/2+20);
+    fill(255);
+    text("button to play again!", width/2-25, height/2+20); //signifiers everywhere
   }
 }
 
