@@ -43,7 +43,7 @@ class Rect {  //constructing a class for the player and obstacle objects
   }
   
   void drawImg(){
-    image(this.img, x-10, y-10, w, h); //draw specified image to screen
+    image(this.img, x-10, y-15, w+15, h+10); //draw specified image to screen
   }
 }
 
@@ -87,8 +87,8 @@ class Bullet extends Rect {
 
 class Explosion{
   
-  int x = 0, y=0, frame = 0, explosionIndex = 0;
-  PImage[] explosionSet = new PImage[15];
+  int x = 0, y = 0, frame = 0, explosionIndex = 0;
+  PImage[] explosionSet = new PImage[8];
   boolean shouldAnimate = false;
   
   Explosion(int x, int y){
@@ -98,28 +98,30 @@ class Explosion{
   
   void addImages(PImage[] images){
     for(int i = 0;i<this.explosionSet.length;i++){
-      explosionSet[i] = images[i];
+      this.explosionSet[i] = images[i];
     }
   }
   
-  void startAnimating(){
+  void startAnimating(){ 
+    this.addImages(explosionArr); //add the image assets to the explosion so that it can animate
     this.shouldAnimate = true;
   }
   
   void endAnimating(){
     this.shouldAnimate = false;
-    explosionIndex = 0;
-    frame = 0;
+    this.explosionIndex = 0;
+    this.frame = 0;
   }
   
   void animate(){
     if(shouldAnimate){
-      if((frame%2)==0){
+      if((frame%3)==0){ //every 2 frames in processing draw a new frame of the explosion gif
         image(this.explosionSet[explosionIndex],this.x,this.y,40,40);
+        println(explosionIndex);
         explosionIndex++;
       }
       frame++;
-      if(frame>=this.explosionSet.length){
+      if(this.explosionIndex>=this.explosionSet.length){
         this.endAnimating();
       }
     }
@@ -129,9 +131,12 @@ class Explosion{
 
 ArrayList<Rect> obstacles = new ArrayList<Rect>();
 ArrayList<Bullet> bullets = new ArrayList<Bullet>();
+ArrayList<Explosion> explosions = new ArrayList<Explosion>();
 Player player = new Player(width/2, height, 20, 20, 0, 0, 0);
 Rect temp; 
 Bullet tempBullet;
+Explosion tempExplosion;
+
 boolean gameOver = false, alreadyShot;
 int x, y, score = -1, currentDiff;
 int[] difficulty = {45, 30, 15};
@@ -140,6 +145,8 @@ PImage spaceship, asteroid, bullet;
 PImage[] bgArr = new PImage[5];
 PImage[] asteroidArr = new PImage[4];
 PImage[] explosionArr = new PImage[8];
+
+
 int bg = 0, bgCount = 0;
 
 Capture cam;
@@ -254,6 +261,9 @@ void draw() {
     temp.move(); //move obstacle
 
     if (temp.collideRect(player)) { //check for collision with player
+      tempExplosion = new Explosion(player.x,player.y);
+      tempExplosion.startAnimating();
+      explosions.add(tempExplosion);
       gameOver = true;
     }
     
@@ -261,6 +271,12 @@ void draw() {
       for(int c = 0; c<bullets.size(); c++){
         tempBullet = bullets.get(c);
         if(temp.collideRect(tempBullet)){
+          
+          //create a new explosion object for each collision that occurs
+          tempExplosion = new Explosion(temp.x-10,temp.y-10); //create the explosion at the point the bullet hits the object
+          tempExplosion.startAnimating(); //set the shouldAnimate property of the explosion to true so that it can start animating afterwards
+          explosions.add(tempExplosion); //add each explosion to a list, they will be animated later
+          
           bullets.remove(tempBullet);
           obstacles.remove(temp);
           score++;
@@ -278,6 +294,11 @@ void draw() {
     temp.drawImg(); //draw the obstacle
   }
   
+  //animate all the explosions that were added to the explosions list
+  for(int i=0;i<explosions.size();i++){
+    tempExplosion = explosions.get(i);
+    tempExplosion.animate();
+  }
   
   if(mousePressed){
     if(alreadyShot == false){
