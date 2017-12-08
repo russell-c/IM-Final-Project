@@ -112,7 +112,7 @@ class Asteroid extends Rect {
 
 class Player extends Rect {
 
-  Player(int x, int y, int w, int h) { //specific constructor, mainly used to specify the player's object attributes
+  Player(int x, int y, int w, int h, int r, int g, int b) { //specific constructor, mainly used to specify the player's object attributes
     this.x = x;
     this.y = y;
     this.w = w;
@@ -190,7 +190,7 @@ class Explosion {
 ArrayList<Asteroid> obstacles = new ArrayList<Asteroid>();
 ArrayList<Bullet> bullets = new ArrayList<Bullet>();
 ArrayList<Explosion> explosions = new ArrayList<Explosion>();
-Player player = new Player(width/2, height, 35, 35);
+Player player = new Player(width/2, height, 20, 20, 0, 0, 0);
 Asteroid temp; 
 Bullet tempBullet;
 Explosion tempExplosion;
@@ -224,7 +224,7 @@ void setup() {
   obstacles.add(new Asteroid());
   trackColour = color(255, 255, 255);
   bulletImg = loadImage("bullet.png");
-  spaceshipImg = loadImage("xwing.png"); //load the spaceship image
+  spaceshipImg = loadImage("spaceship.png"); //load the spaceship image
   player.setImage(spaceshipImg); //attach it to the player object 
  
   String imageName;
