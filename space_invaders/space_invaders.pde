@@ -132,6 +132,7 @@ class Explosion {
   int x = 0, y = 0, frame = 0, explosionIndex = 0;
   PImage[] explosionSet = new PImage[8];
   boolean shouldAnimate = false;
+  SoundFile explode;
 
   Explosion(int x, int y) {
     this.x = x;
@@ -145,6 +146,7 @@ class Explosion {
   }
 
   void startAnimating() { 
+    explode.play();
     this.addImages(explosionArr); //add the image assets to the explosion so that it can animate
     this.shouldAnimate = true;
   }
@@ -154,19 +156,11 @@ class Explosion {
     this.explosionIndex = 0;
     this.frame = 0;
   }
-<<<<<<< HEAD
-
-  void animate() {
-    if (shouldAnimate) {
-      if ((frame%3)==0) { //every 2 frames in processing draw a new frame of the explosion gif
-        image(this.explosionSet[explosionIndex], this.x, this.y, 40, 40);
-=======
   
   void animate(){
     if(shouldAnimate){
       if((frame%3)==0){ //every 2 frames in processing draw a new frame of the explosion gif
         image(this.explosionSet[explosionIndex],this.x,this.y,40,40);
->>>>>>> 2d76fa0373ee4ce89799647434d36b2f86c229e9
         explosionIndex++;
       }
       frame++;
@@ -184,11 +178,8 @@ Player player = new Player(width/2, height, 20, 20, 0, 0, 0);
 Asteroid temp; 
 Bullet tempBullet;
 Explosion tempExplosion;
-<<<<<<< HEAD
 Earth earth = new Earth(450,225);
-=======
 SoundFile explosionSound, bgMusic, laser;
->>>>>>> 2d76fa0373ee4ce89799647434d36b2f86c229e9
 
 boolean gameOver = false, alreadyShot;
 int x, y, score = -1, currentDiff;
@@ -308,12 +299,12 @@ void draw() {
 
     //UNCOMMENT FOR ACTUAL PROJECT
     //player.move(width-closestX,closestY); //move the player, the image is mirrored so flip the x value in which the player rect moves
-
-    //FOR TESTING
+  }
+  
+  //FOR TESTING
     player.move(mouseX, mouseY);
     //player.drawRect(); //display the player
     player.drawImg();
-  }
 
   if (score==-1) {
     score=0;
@@ -331,9 +322,9 @@ void draw() {
 
     if (temp.collideRect(player) || earth.damageTaken >= 100) { //check for collision with player
       tempExplosion = new Explosion(player.x, player.y);
+      tempExplosion.explode = explosionSound;
       tempExplosion.startAnimating();
       explosions.add(tempExplosion);
-      explosionSound.play();
       gameOver = true;
     }
     
@@ -344,13 +335,9 @@ void draw() {
 
           //create a new explosion object for each collision that occurs
           tempExplosion = new Explosion(temp.x-10, temp.y-10); //create the explosion at the point the bullet hits the object
+          tempExplosion.explode = explosionSound;
           tempExplosion.startAnimating(); //set the shouldAnimate property of the explosion to true so that it can start animating afterwards
           explosions.add(tempExplosion); //add each explosion to a list, they will be animated later
-<<<<<<< HEAD
-
-=======
-          explosionSound.play();
->>>>>>> 2d76fa0373ee4ce89799647434d36b2f86c229e9
           bullets.remove(tempBullet);
           obstacles.remove(temp);
           score++;
@@ -361,14 +348,12 @@ void draw() {
     if(temp.collideRect(earth)){
       earth.takeDamage(temp.damage);
       tempExplosion = new Explosion(temp.x-10,temp.y-10);
+      tempExplosion.explode = explosionSound;
       tempExplosion.startAnimating();
       explosions.add(tempExplosion);
       obstacles.remove(temp);
     }
-    
-    //if(earth.damageTaken >= 100){
-    //  gameOver = true;
-    //}
+   
 
     if (temp.count==currentDiff) { //if count reaches this value (i.e. has been on screen for 45 frames) add a new obstacle
       obstacles.add(new Asteroid());
