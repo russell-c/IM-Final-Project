@@ -145,6 +145,8 @@ class Player extends Rect {
 }
 
 class Bullet extends Rect {
+  
+  boolean isBig;
 
   Bullet(int x, int y) { //specific constructor, mainly used to specify the player's object attributes
     this.x = x;
@@ -153,6 +155,7 @@ class Bullet extends Rect {
     this.h = 25;
     this.velocity = 2;
     this.count = 0;
+    this.isBig = false;
   }
 
   void move() { //generic move that updates the y attribute, used for obstacle objects, note: y pos is constant
@@ -236,8 +239,8 @@ LargeAsteroid tempLargeAsteroid;
 StellarObject earth = new StellarObject(320,263,75, 333, 40, 0);
 StellarObject moon = new StellarObject(80,80,width/2+375, 253, 25, 1);
 
-boolean gameOver = false, alreadyShot, showWarning = false, drawMoon = false, newHigh = false, textDisplaying = false, makeLargeAsteroid = false;
-int x, y, score = -1, currentDiff, highScore = -1, bigNiggaCounter = 0, largeAsteroidFrameCount = -1;
+boolean gameOver = false, alreadyShot, showWarning = false, drawMoon = false, newHigh = false, textDisplaying = false, makeLargeAsteroid = false, makeBigBullet = false;
+int x, y, score = -1, currentDiff, highScore = -1, bigBulletCounter = 0, largeAsteroidFrameCount = -1;
 int[] difficulty = {50, 35, 25}, warningCounter = {0, 0};
 color trackColour;
 PImage spaceshipImg, bulletImg, bigBulletImg, largeAsteroidImg;
@@ -401,6 +404,12 @@ void draw() {
     rect(width-(healthBarWidth+20),20,healthBarWidth,30);
     fill(earthBarColor);
     rect(width-(healthBarWidth+20),20,earthHealth,30);
+    
+    if(makeBigBullet){
+      fill(achievementColor);
+      textFont(font, 15);
+      text("Special bullet ready!",5,42);
+    }
     
     
     if(showWarning){
@@ -635,27 +644,14 @@ void draw() {
             tempExplosion.explode = explosionSound;
             tempExplosion.startAnimating(); //set the shouldAnimate property of the explosion to true so that it can start animating afterwards
             explosions.add(tempExplosion); //add each explosion to a list, they will be animated later
-            bullets.remove(tempBullet);
+            if(!tempBullet.isBig){
+              bullets.remove(tempBullet);
+            }
             obstacles.remove(temp);
             score++;
             if(score>60){
-              bigNiggaCounter++;
+              bigBulletCounter++;
             }
-          }
-        }
-      }
-      
-      if (!bigBullets.isEmpty()) {
-        for (int c = 0; c<bigBullets.size(); c++) {
-          tempBullet = bigBullets.get(c);
-          if (temp.collideRect(tempBullet)) {
-            //create a new explosion object for each collision that occurs
-            tempExplosion = new Explosion(temp.x-10, temp.y-10); //create the explosion at the point the bullet hits the object
-            tempExplosion.explode = explosionSound;
-            tempExplosion.startAnimating(); //set the shouldAnimate property of the explosion to true so that it can start animating afterwards
-            explosions.add(tempExplosion); //add each explosion to a list, they will be animated later
-            obstacles.remove(temp);
-            score++;
           }
         }
       }
@@ -705,14 +701,8 @@ void draw() {
       tempExplosion.animate();
     }
     
-    if(bigNiggaCounter >= 5){
-      tempBullet = new Bullet(mouseX, mouseY-25);
-      tempBullet.setImage(bigBulletImg);
-      tempBullet.h = 50;
-      tempBullet.w = 50;
-      tempBullet.velocity = 3;
-      bigBullets.add(tempBullet);
-      bigNiggaCounter = 0;
+    if(bigBulletCounter >= 5){
+      makeBigBullet = true;
     }
     
     //UNCOMMENT IF BUTTON BREAKS
@@ -731,7 +721,6 @@ void draw() {
     if (!bullets.isEmpty()) {
       for (int i=0; i<bullets.size(); i++) {
         tempBullet = bullets.get(i);
-        tempBullet.setImage(bulletImg);
         tempBullet.move();
         tempBullet.drawImg();
   
@@ -741,17 +730,6 @@ void draw() {
       }
     }
     
-    if (!bigBullets.isEmpty()){
-      for(int i = 0; i < bigBullets.size(); i++){
-        tempBullet = bigBullets.get(i);
-        tempBullet.move();
-        tempBullet.drawImg();
-        
-        if (tempBullet.y<0) {
-          bullets.remove(tempBullet);
-        }
-      }
-    }
   }
   if (gameOver == true) { //if a collision happened
     bgMusic.rate(0.95);
@@ -764,7 +742,7 @@ void draw() {
     moonBarColor = healthyColor;
     warningCounter[0] = 0;
     warningCounter[1] = 0;
-    bigNiggaCounter = 0;
+    bigBulletCounter = 0;
     earth.damageTaken = 0;
     moon.damageTaken = 0;
     obstacles.clear(); //clear obstacle list entirely
@@ -795,11 +773,17 @@ void draw() {
       fill(255);
     }
     
-    text("Push ", width/2-120, height/2+76); 
+    //text("Push ", width/2-120, height/2+76); 
+    //fill(healthyColor);
+    //text("ENTER ",width/2-80, height/2+76);
+    //fill(255);
+    //text("button to play again!", width/2-25, height/2+76); //signifiers everywhere
+    
+    text("Pull ", width/2-105, height/2+76); 
     fill(healthyColor);
-    text("ENTER ",width/2-80, height/2+76);
+    text("TRIGGER ",width/2-75, height/2+76);
     fill(255);
-    text("button to play again!", width/2-25, height/2+76); //signifiers everywhere
+    text("to play again!", width/2-7, height/2+76); //signifiers everywhere
   }
 }
 
@@ -821,7 +805,20 @@ void serialEvent (Serial port){
   inByte = trim(inByte);
   if(inByte.equals("1")){
     if(!gameOver){
-      bullets.add(new Bullet(player.x, player.y-25));
+      if(makeBigBullet){
+        tempBullet = new Bullet(player.x, player.y-25);
+        tempBullet.setImage(bigBulletImg);
+        tempBullet.h = 50;
+        tempBullet.w = 50;
+        tempBullet.velocity = 3;
+        tempBullet.isBig = true;
+        bullets.add(tempBullet);
+        bigBulletCounter = 0;
+        makeBigBullet = false;
+      }
+      tempBullet = new Bullet(player.x, player.y-25);
+      tempBullet.setImage(bulletImg);
+      bullets.add(tempBullet);
       laser.play();
     } else {
       score = 0; //reset score
