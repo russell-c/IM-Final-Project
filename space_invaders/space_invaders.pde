@@ -214,8 +214,8 @@ Explosion tempExplosion;
 StellarObject earth = new StellarObject(320,263,75, 333, 40, 0);
 StellarObject moon = new StellarObject(80,80,width/2+375, 253, 25, 1);
 
-boolean gameOver = false, alreadyShot, showWarning = false, drawMoon = false;
-int x, y, score = -1, currentDiff, warningCounter = 0, highScore;
+boolean gameOver = false, alreadyShot, showWarning = false, drawMoon = false, newHigh = false;
+int x, y, score = -1, currentDiff, warningCounter = 0, highScore = 0;
 int[] difficulty = {45, 30, 15};
 color trackColour;
 PImage spaceshipImg, bulletImg;
@@ -224,7 +224,7 @@ PImage[] bgArr = new PImage[5];
 PImage[] asteroidArr = new PImage[4];
 PImage[] explosionArr = new PImage[8];
 PFont font; 
-color dangerColor = color(242,33,40), healthyColor = color(39,216,77);
+color dangerColor = color(242,33,40), healthyColor = color(39,216,77), achievementColor = color(255, 255, 0);
 color healthBarColor = healthyColor;
 float healthBarWidth = 200, tooMuchDamageTaken = 100;
 float currentHealth = 0;
@@ -304,6 +304,11 @@ void draw() {
     score=0;
   }
   
+  if(highScore < score){
+    highScore = score;
+    newHigh = true;
+  }
+  
   currentHealth = ((tooMuchDamageTaken - earth.damageTaken)/100) * healthBarWidth;
   
   fill(255);
@@ -318,7 +323,14 @@ void draw() {
   text("Score: ", width-(healthBarWidth+130), 60); //display score in top left
   textFont(font, 15);
   text(score, width-(healthBarWidth+80), 60);
-  
+  textFont(font, 15);
+  text("High Score: ", width-(healthBarWidth+130), 78); //display score in top left
+  textFont(font, 15);
+  if(newHigh){
+    fill(achievementColor);
+  }
+  text(highScore, width-(healthBarWidth+45), 78);
+  fill(255);
   
   if(showWarning && (warningCounter < 100)){
       
@@ -520,12 +532,25 @@ void draw() {
     fill(healthyColor);
     text(score, width/2+10, height/2);
     fill(255);
-   
-    text("Push ", width/2-120, height/2+20); 
+    textFont(font, 15);
+    text("High Score: ", width/2-60, height/2+18);
     fill(healthyColor);
-    text("ENTER ",width/2-80, height/2+20);
+    text(highScore, width/2+25, height/2+18);
     fill(255);
-    text("button to play again!", width/2-25, height/2+20); //signifiers everywhere
+    
+    if(newHigh){
+      fill(achievementColor);
+      text("NEW HIGH SCORE!!", width/2-75, height/2+46);
+      fill(255);
+    }
+    
+    
+   
+    text("Push ", width/2-120, height/2+76); 
+    fill(healthyColor);
+    text("ENTER ",width/2-80, height/2+76);
+    fill(255);
+    text("button to play again!", width/2-25, height/2+76); //signifiers everywhere
   }
 }
 
@@ -534,6 +559,7 @@ void keyPressed() {
     score = 0; //reset score
     obstacles.add(new Asteroid()); //reinitialise obstacles list
     gameOver = false;
+    newHigh = false;
   }
 }
 
