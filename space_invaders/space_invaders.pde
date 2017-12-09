@@ -58,20 +58,35 @@ class StellarObject extends Rect {
   int damageTaken;
   int frame = 0;
   int imageIndex = 0;
-  PImage[] imageArr ;
+  PImage[] imageArr;
+  Rect hitBox;
   
-  StellarObject(int w, int h, int x, int y, int arrSize){
+  StellarObject(int w, int h, int x, int y, int arrSize, int type){
     damageTaken = 0;
     this.x = x;
     this.y = y;
-    this.w = w-30;
-    this.h = h-70;
+    this.w = w;
+    this.h = h;
     imageArr = new PImage[arrSize];
+    hitBox = new Rect();
+   
+    if(type == 0){
+      hitBox.y = y+50;
+      hitBox.h = h-50;
+      hitBox.w = w-40;
+      hitBox.x = x+20;
+    } else if(type == 1){
+      hitBox.h = h;
+      hitBox.y = y;
+      hitBox.w = w;
+      hitBox.x = x;
+    }
+    
   }
   
   void drawImages(){
     if(this.imgSet){
-      image(this.imageArr[imageIndex],this.x,this.y-70,this.w,this.h);
+      image(this.imageArr[imageIndex],this.x,this.y,this.w,this.h);
       if(frame>=15){
         imageIndex = (imageIndex+1)%imageArr.length;
         frame = 0;
@@ -196,11 +211,11 @@ Player player = new Player(width/2, height, 35, 35);
 Asteroid temp; 
 Bullet tempBullet;
 Explosion tempExplosion;
-StellarObject earth = new StellarObject(350,333,75, height+333, 40);
-StellarObject moon = new StellarObject(110,150,width/2+375, height+253, 25);
+StellarObject earth = new StellarObject(320,263,75, 333, 40, 0);
+StellarObject moon = new StellarObject(80,80,width/2+375, 253, 25, 1);
 
 boolean gameOver = false, alreadyShot, showWarning = false, drawMoon = false;
-int x, y, score = -1, currentDiff, warningCounter = 0;
+int x, y, score = -1, currentDiff, warningCounter = 0, highScore;
 int[] difficulty = {45, 30, 15};
 color trackColour;
 PImage spaceshipImg, bulletImg;
@@ -420,7 +435,7 @@ void draw() {
       }
     }
     
-    if(temp.collideRect(earth)){
+    if(temp.collideRect(earth.hitBox)){
       earth.takeDamage(temp.damage);
       tempExplosion = new Explosion(temp.x-10,temp.y-10);
       tempExplosion.explode = explosionSound;
@@ -429,7 +444,7 @@ void draw() {
       obstacles.remove(temp);
     }
     
-    if(temp.collideRect(moon) && drawMoon){
+    if(temp.collideRect(moon.hitBox) && drawMoon){
       //moon.takeDamage((int)(temp.damage*1.5));
       earth.takeDamage(temp.damage);
       tempExplosion = new Explosion(temp.x-10,temp.y-10);
