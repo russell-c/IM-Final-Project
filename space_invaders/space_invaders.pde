@@ -16,8 +16,8 @@ class Rect {  //constructing a class for the player and obstacle objects
   Rect() { //generic construction, assigns random values to each attribute, used for obstacle objects
     this.y = 0;
     this.x = (int)random(0, width);
-    this.w = 25;
-    this.h = 25;
+    this.w = (int)random(10,20);
+    this.h = w;
     this.velocity = (int)random(1, 3);
     this.count = 0;
   }
@@ -53,19 +53,20 @@ class Rect {  //constructing a class for the player and obstacle objects
   }
 }
 
-class Earth extends Rect {
+class StellarObject extends Rect {
   
   int damageTaken;
   int frame = 0;
   int imageIndex = 0;
-  PImage[] imageArr = new PImage[40];
+  PImage[] imageArr ;
   
-  Earth(int w, int h){
+  StellarObject(int w, int h, int x, int y, int arrSize){
     damageTaken = 0;
-    this.x = 0;
-    this.y = height+h;
+    this.x = x;
+    this.y = y;
     this.w = w-30;
     this.h = h-70;
+    imageArr = new PImage[arrSize];
   }
   
   void drawImages(){
@@ -93,12 +94,13 @@ class Earth extends Rect {
   }
 }
 
+
 class Asteroid extends Rect {
   
   int damage = 0;
   
   Asteroid(){
-    damage = (int) random(5,15);
+    damage = (int)(w*0.75);
   }
   
   void drawImg(){
@@ -194,15 +196,15 @@ Player player = new Player(width/2, height, 35, 35);
 Asteroid temp; 
 Bullet tempBullet;
 Explosion tempExplosion;
-Earth earth = new Earth(350,333);
+StellarObject earth = new StellarObject(350,333,75, height+333, 40);
+StellarObject moon = new StellarObject(110,150,width/2+375, height+253, 25);
 
-
-boolean gameOver = false, alreadyShot;
-int x, y, score = -1, currentDiff;
+boolean gameOver = false, alreadyShot, showWarning = false, drawMoon = false;
+int x, y, score = -1, currentDiff, warningCounter = 0;
 int[] difficulty = {45, 30, 15};
 color trackColour;
 PImage spaceshipImg, bulletImg;
-PImage[] earthImages = new PImage[40];
+PImage[] earthImages = new PImage[40], moonImages = new PImage[25];
 PImage[] bgArr = new PImage[5];
 PImage[] asteroidArr = new PImage[4];
 PImage[] explosionArr = new PImage[8];
@@ -213,9 +215,8 @@ float healthBarWidth = 200, tooMuchDamageTaken = 100;
 float currentHealth = 0;
 int bg = 0, bgCount = 0;
 SoundFile explosionSound, bgMusic, laser;
-
-
 Capture cam;
+
 void setup() {
   size(640, 480);
   cam = new Capture(this, width, height);
@@ -223,7 +224,8 @@ void setup() {
   background(255);
   obstacles.add(new Asteroid());
   trackColour = color(255, 255, 255);
-  bulletImg = loadImage("bullet.png");
+   
+  bulletImg = loadImage("missile.png");
   spaceshipImg = loadImage("xwing.png"); //load the spaceship image
   player.setImage(spaceshipImg); //attach it to the player object 
  
@@ -235,6 +237,13 @@ void setup() {
   }
   
   earth.setImages(earthImages);
+  
+  for(int i=0;i<moon.imageArr.length;i++){
+    imageName = "rotating_moon_"+nf(i,2)+"_delay-0.04s.gif";
+    moonImages[i] = loadImage(imageName);
+  }
+  
+  moon.setImages(moonImages);
   
   for (int i = 0; i < 5; i++) {
     imageName = "background_" + nf(i, 1) + "_delay-0.25s.gif";
@@ -295,14 +304,39 @@ void draw() {
   textFont(font, 15);
   text(score, width-(healthBarWidth+80), 60);
   
+  
+  if(showWarning && (warningCounter < 100)){
+      
+    if(moon.damageTaken >= 50){
+      fill(255);
+      textFont(font, 20);
+      text("Oh no! The Moon is in danger! Save it!", width/2-150,height/2);
+    } else if(earth.damageTaken >= 50) {
+      fill(255);
+      textFont(font, 20);
+      text("Oh no! The Earth is in danger! Save it!", width/2-150,height/2);
+    }
+    
+    warningCounter++;
+    if(warningCounter >= 100){ 
+      showWarning = false; 
+    }
+  }
+  
   earth.drawImages();
 
   if (score<40) {
     currentDiff = difficulty[0];
+    drawMoon = true;
   } else if (score>60 && score < 120) {
     currentDiff = difficulty[1];
+    drawMoon = true;
   } else if (score>120) {
     currentDiff = difficulty[2];
+  }
+  
+  if(drawMoon){
+    moon.drawImages();
   }
 
   float worldRecord = 500; 
@@ -395,6 +429,16 @@ void draw() {
       obstacles.remove(temp);
     }
     
+    if(temp.collideRect(moon) && drawMoon){
+      //moon.takeDamage((int)(temp.damage*1.5));
+      earth.takeDamage(temp.damage);
+      tempExplosion = new Explosion(temp.x-10,temp.y-10);
+      tempExplosion.explode = explosionSound;
+      tempExplosion.startAnimating();
+      explosions.add(tempExplosion);
+      obstacles.remove(temp);
+    }
+    
 
     if (temp.count==currentDiff) { //if count reaches this value (i.e. has been on screen for 45 frames) add a new obstacle
       obstacles.add(new Asteroid());
@@ -408,6 +452,7 @@ void draw() {
   
   if(earth.damageTaken >= 50){
       healthBarColor = dangerColor;
+      showWarning = true;
   }
 
   //animate all the explosions that were added to the explosions list
@@ -443,7 +488,9 @@ void draw() {
 
 
   if (gameOver == true) { //if a collision happened
+    drawMoon = false;
     healthBarColor = healthyColor;
+    warningCounter = 0;
     earth.damageTaken = 0;
     obstacles.clear(); //clear obstacle list entirely
     bullets.clear();
