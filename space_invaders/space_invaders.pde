@@ -225,9 +225,9 @@ PImage[] asteroidArr = new PImage[4];
 PImage[] explosionArr = new PImage[8];
 PFont font; 
 color dangerColor = color(242,33,40), healthyColor = color(39,216,77), achievementColor = color(255, 255, 0);
-color healthBarColor = healthyColor;
+color earthBarColor = healthyColor, moonBarColor = healthyColor;
 float healthBarWidth = 200, tooMuchDamageTaken = 100;
-float currentHealth = 0;
+float earthHealth = 0, moonHealth = 0;
 int bg = 0, bgCount = 0;
 SoundFile explosionSound, bgMusic, laser;
 Capture cam;
@@ -309,30 +309,38 @@ void draw() {
     newHigh = true;
   }
   
-  currentHealth = ((tooMuchDamageTaken - earth.damageTaken)/100) * healthBarWidth;
+  earthHealth = ((tooMuchDamageTaken - earth.damageTaken)/100) * healthBarWidth;
+  moonHealth = ((tooMuchDamageTaken - moon.damageTaken)/100) * healthBarWidth;
   
   fill(255);
   textFont(font, 15);
   text("Earth's Health: ",width-(healthBarWidth+130),42);
   fill(52,52,52);
   rect(width-(healthBarWidth+20),20,healthBarWidth,30);
-  fill(healthBarColor);
-  rect(width-(healthBarWidth+20),20,currentHealth,30);
+  fill(earthBarColor);
+  rect(width-(healthBarWidth+20),20,earthHealth,30);
   fill(255);
   textFont(font, 15);
-  text("Score: ", width-(healthBarWidth+130), 60); //display score in top left
+  text("Moon's Health: ",width-(healthBarWidth+130),82);
+  fill(52,52,52);
+  rect(width-(healthBarWidth+20),60,healthBarWidth,30);
+  fill(moonBarColor);
+  rect(width-(healthBarWidth+20),60,moonHealth,30);
+  fill(255);
   textFont(font, 15);
-  text(score, width-(healthBarWidth+80), 60);
+  text("Score: ", width-(healthBarWidth+130), 100); //display score in top left
   textFont(font, 15);
-  text("High Score: ", width-(healthBarWidth+130), 78); //display score in top left
+  text(score, width-(healthBarWidth+80), 100);
+  textFont(font, 15);
+  text("High Score: ", width-(healthBarWidth+130), 118); //display score in top left
   textFont(font, 15);
   if(newHigh){
     fill(achievementColor);
   }
-  text(highScore, width-(healthBarWidth+45), 78);
+  text(highScore, width-(healthBarWidth+45), 118);
   fill(255);
   
-  if(showWarning && (warningCounter < 100)){
+  if(showWarning && warningCounter < 100){
       
     if(moon.damageTaken >= 50){
       fill(255);
@@ -348,11 +356,13 @@ void draw() {
     if(warningCounter >= 100){ 
       showWarning = false; 
     }
+  } else if(showWarning == false){
+    warningCounter = 0;
   }
   
   earth.drawImages();
 
-  if (score<40) {
+  if (score<60) {
     currentDiff = difficulty[0];
     drawMoon = true;
   } else if (score>60 && score < 120) {
@@ -423,7 +433,7 @@ void draw() {
     }
     temp.move(); //move obstacle
 
-    if (temp.collideRect(player) || earth.damageTaken >= 100) { //check for collision with player
+    if (temp.collideRect(player) || earth.damageTaken >= 100 || moon.damageTaken >= 100) { //check for collision with player
       tempExplosion = new Explosion(player.x, player.y);
       tempExplosion.explode = explosionSound;
       tempExplosion.startAnimating();
@@ -457,8 +467,7 @@ void draw() {
     }
     
     if(temp.collideRect(moon.hitBox) && drawMoon){
-      //moon.takeDamage((int)(temp.damage*1.5));
-      earth.takeDamage(temp.damage);
+      moon.takeDamage((int)(temp.damage*1.5));
       tempExplosion = new Explosion(temp.x-10,temp.y-10);
       tempExplosion.explode = explosionSound;
       tempExplosion.startAnimating();
@@ -478,7 +487,12 @@ void draw() {
   }
   
   if(earth.damageTaken >= 50){
-      healthBarColor = dangerColor;
+      earthBarColor = dangerColor;
+      showWarning = true;
+  }
+  
+  if(moon.damageTaken >= 50){
+      moonBarColor = dangerColor;
       showWarning = true;
   }
 
@@ -516,16 +530,18 @@ void draw() {
 
   if (gameOver == true) { //if a collision happened
     drawMoon = false;
-    healthBarColor = healthyColor;
+    earthBarColor = healthyColor;
+    moonBarColor = healthyColor;
     warningCounter = 0;
     earth.damageTaken = 0;
+    moon.damageTaken = 0;
     obstacles.clear(); //clear obstacle list entirely
     bullets.clear();
     background(bgArr[bg]);
     fill(255);
     textFont(font, 26);
     fill(dangerColor);
-    text("Game Over!", width/2-85, height/2-25); //signifiers
+    text("Game Over!", width/2-80, height/2-25); //signifiers
     fill(255);
     textFont(font, 15);
     text("Score: ", width/2-40, height/2);
