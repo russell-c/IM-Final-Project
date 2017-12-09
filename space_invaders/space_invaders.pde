@@ -214,7 +214,7 @@ Explosion tempExplosion;
 StellarObject earth = new StellarObject(320,263,75, 333, 40, 0);
 StellarObject moon = new StellarObject(80,80,width/2+375, 253, 25, 1);
 
-boolean gameOver = false, alreadyShot, showWarning = false, drawMoon = false, newHigh = false;
+boolean gameOver = false, alreadyShot, showWarning = false, drawMoon = false, newHigh = false, textDisplaying = false;
 int x, y, score = -1, currentDiff, warningCounter = 0, highScore = -1;
 int[] difficulty = {45, 30, 15};
 color trackColour;
@@ -229,6 +229,7 @@ color earthBarColor = healthyColor, moonBarColor = healthyColor;
 float healthBarWidth = 200, tooMuchDamageTaken = 100;
 float earthHealth = 0, moonHealth = 0;
 int bg = 0, bgCount = 0;
+int[] levelCount = {0, 0, 0};
 SoundFile explosionSound, bgMusic, laser;
 Table highScoreTable;
 Capture cam;
@@ -393,13 +394,47 @@ void draw() {
   
   earth.drawImages();
 
-  if (score<60) {
+
+  if (score<30) {
+    if(levelCount[0] < 180){
+      levelCount[0]++;
+      fill(achievementColor);
+      textFont(font, 20);
+      text("Level 1: Protect the Earth! Save the Dinosaurs!", width/2-190,height/2);
+      fill(255);
+      obstacles.clear();
+      textDisplaying = true;
+    } else {
+      textDisplaying = false;
+    }
     currentDiff = difficulty[0];
-  } else if (score>=60 && score <= 120) {
+  } else if (score>=30 && score <= 60) {
+    if(levelCount[1] < 180){
+      levelCount[1]++;
+      fill(achievementColor);
+      textFont(font, 20);
+      text("Level 2: The Moon is under threat! You know what to do!", width/2-240,height/2);
+      fill(255);
+      obstacles.clear();
+      textDisplaying = true;
+    } else {
+      textDisplaying = false;
+    }
     currentDiff = difficulty[1];
     bgMusic.rate(1);
     drawMoon = true;
-  } else if (score>120) {
+  } else if (score>60) {
+    if(levelCount[2] < 180){
+      levelCount[2]++;
+      fill(achievementColor);
+      textFont(font, 20);
+      text("Level 3: Now entering Chaos Mode!", width/2-150,height/2);
+      fill(255);
+      obstacles.clear();
+      textDisplaying = true;
+    } else {
+      textDisplaying = false;
+    }
     bgMusic.rate(1.05);
     currentDiff = difficulty[2];
   }
@@ -455,9 +490,10 @@ void draw() {
     player.drawImg();
 
 
-  if (obstacles.isEmpty()) {
+  if (obstacles.isEmpty() && !textDisplaying) {
     obstacles.add(new Asteroid());
   }
+  
   for (int i = 0; i<obstacles.size(); i++) { //loop through list of obstacles
     temp = obstacles.get(i);
     if (temp.imgSet == false) {
@@ -562,6 +598,9 @@ void draw() {
 
   if (gameOver == true) { //if a collision happened
     bgMusic.rate(0.95);
+    levelCount[0] = 0;
+    levelCount[1] = 0;
+    levelCount[2] = 0;
     drawMoon = false;
     earthBarColor = healthyColor;
     moonBarColor = healthyColor;
