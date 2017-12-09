@@ -206,6 +206,7 @@ class Explosion {
 
 ArrayList<Asteroid> obstacles = new ArrayList<Asteroid>();
 ArrayList<Bullet> bullets = new ArrayList<Bullet>();
+ArrayList<Bullet> bigBullets = new ArrayList<Bullet>();
 ArrayList<Explosion> explosions = new ArrayList<Explosion>();
 Player player = new Player(width/2, height, 35, 35);
 Asteroid temp; 
@@ -215,8 +216,8 @@ StellarObject earth = new StellarObject(320,263,75, 333, 40, 0);
 StellarObject moon = new StellarObject(80,80,width/2+375, 253, 25, 1);
 
 boolean gameOver = false, alreadyShot, showWarning = false, drawMoon = false, newHigh = false, textDisplaying = false;
-int x, y, score = -1, currentDiff, warningCounter = 0, highScore = -1;
-int[] difficulty = {45, 30, 15};
+int x, y, score = -1, currentDiff, highScore = -1, bigNiggaCounter = 0;
+int[] difficulty = {45, 30, 15}, warningCounter = {0, 0};
 color trackColour;
 PImage spaceshipImg, bulletImg;
 PImage[] earthImages = new PImage[40], moonImages = new PImage[25];
@@ -304,15 +305,17 @@ boolean setGreeting = true;
 TableRow newRow;
 void draw() {
   
+  background(bgArr[bg]);
+  bgCount++;
+  if (bgCount>=10) {
+    bg = (bg+1)%5;
+    bgCount=0;
+  }
+  
   if(!gameOver){
     newRow = highScoreTable.addRow();
     cam.loadPixels();
-    background(bgArr[bg]);
-    bgCount++;
-    if (bgCount>=10) {
-      bg = (bg+1)%5;
-      bgCount=0;
-    }
+    
     
     if (score==-1) {
       score=0;
@@ -373,25 +376,26 @@ void draw() {
     rect(width-(healthBarWidth+20),20,earthHealth,30);
     
     
-    if(showWarning && warningCounter < 100){
+    if(showWarning){
         
-      if(moon.damageTaken >= 50){
+      if(moon.damageTaken >= 50 && warningCounter[0]<=100){
         fill(255);
         textFont(font, 20);
         text("Oh no! The Moon is in danger! Save it!", width/2-150,height/2);
-      } else if(earth.damageTaken >= 50) {
+        warningCounter[0]++;
+        if(warningCounter[0] == 150){ 
+          showWarning = false; 
+        }
+      } else if(earth.damageTaken >= 50 && warningCounter[1]<=100) {
         fill(255);
         textFont(font, 20);
         text("Oh no! The Earth is in danger! Save it!", width/2-150,height/2);
+        warningCounter[1]++;
+        if(warningCounter[1] == 150){ 
+          showWarning = false; 
+        }
       }
-      
-      warningCounter++;
-      if(warningCounter >= 100){ 
-        showWarning = false; 
-      }
-    } else if(showWarning == false){
-      warningCounter = 0;
-    }
+    } 
     
     earth.drawImages();
   
@@ -522,6 +526,24 @@ void draw() {
             bullets.remove(tempBullet);
             obstacles.remove(temp);
             score++;
+            if(score>60){
+              bigNiggaCounter++;
+            }
+          }
+        }
+      }
+      
+      if (!bigBullets.isEmpty()) {
+        for (int c = 0; c<bigBullets.size(); c++) {
+          tempBullet = bigBullets.get(c);
+          if (temp.collideRect(tempBullet)) {
+            //create a new explosion object for each collision that occurs
+            tempExplosion = new Explosion(temp.x-10, temp.y-10); //create the explosion at the point the bullet hits the object
+            tempExplosion.explode = explosionSound;
+            tempExplosion.startAnimating(); //set the shouldAnimate property of the explosion to true so that it can start animating afterwards
+            explosions.add(tempExplosion); //add each explosion to a list, they will be animated later
+            obstacles.remove(temp);
+            score++;
           }
         }
       }
@@ -570,6 +592,15 @@ void draw() {
       tempExplosion = explosions.get(i);
       tempExplosion.animate();
     }
+    
+    if(bigNiggaCounter >= 5){
+      tempBullet = new Bullet(mouseX, mouseY-25);
+      tempBullet.h = 100;
+      tempBullet.w = 100;
+      tempBullet.velocity = 3;
+      bigBullets.add(tempBullet);
+      bigNiggaCounter = 0;
+    }
   
     if (mousePressed) {
       if (alreadyShot == false) {
@@ -595,6 +626,19 @@ void draw() {
         }
       }
     }
+    
+    if (!bigBullets.isEmpty()){
+      for(int i = 0; i < bigBullets.size(); i++){
+        tempBullet = bigBullets.get(i);
+        tempBullet.setImage(bulletImg);
+        tempBullet.move();
+        tempBullet.drawImg();
+        
+        if (tempBullet.y<0) {
+          bullets.remove(tempBullet);
+        }
+      }
+    }
   }
   if (gameOver == true) { //if a collision happened
     bgMusic.rate(0.95);
@@ -604,11 +648,15 @@ void draw() {
     drawMoon = false;
     earthBarColor = healthyColor;
     moonBarColor = healthyColor;
-    warningCounter = 0;
+    warningCounter[0] = 0;
+    warningCounter[1] = 0;
+    bigNiggaCounter = 0;
     earth.damageTaken = 0;
     moon.damageTaken = 0;
     obstacles.clear(); //clear obstacle list entirely
     bullets.clear();
+    explosions.clear();
+    bigBullets.clear();
     background(bgArr[bg]);
     fill(255);
     textFont(font, 26);
