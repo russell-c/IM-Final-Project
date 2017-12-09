@@ -304,298 +304,298 @@ boolean setGreeting = true;
 TableRow newRow;
 void draw() {
   
-  newRow = highScoreTable.addRow();
-  cam.loadPixels();
-  background(bgArr[bg]);
-  bgCount++;
-  if (bgCount>=10) {
-    bg = (bg+1)%5;
-    bgCount=0;
-  }
-  
-  if (score==-1) {
-    score=0;
-  }
-  
-  if(highScore < score){
-    highScore = score;
-    newRow.setInt("highscore",highScore);
-    saveTable(highScoreTable,"data/highscore.csv");
-    newHigh = true;
-  }
-  
-  earthHealth = ((tooMuchDamageTaken - earth.damageTaken)/100) * healthBarWidth;
-  if(drawMoon){
-    moonHealth = ((tooMuchDamageTaken - moon.damageTaken)/100) * healthBarWidth;
-    fill(255);
-    textFont(font, 15);
-    text("Moon's Health: ",width-(healthBarWidth+130),82);
-    fill(52,52,52);
-    rect(width-(healthBarWidth+20),60,healthBarWidth,30);
-    fill(moonBarColor);
-    rect(width-(healthBarWidth+20),60,moonHealth,30);
-    fill(255);
-    textFont(font, 15);
-    text("Score: ", width-(healthBarWidth+130), 100); //display score in top left
-    textFont(font, 15);
-    text(score, width-(healthBarWidth+80), 100);
-    textFont(font, 15);
-    text("High Score: ", width-(healthBarWidth+130), 118); //display score in top left
-    textFont(font, 15);
-    if(newHigh){
-      fill(achievementColor);
-    }
-    text(highScore, width-(healthBarWidth+45), 118);
-    fill(255);
-  } else {
-    fill(255);
-    textFont(font, 15);
-    text("Score: ", width-(healthBarWidth+130), 60); //display score in top left
-    textFont(font, 15);
-    text(score, width-(healthBarWidth+80), 60);
-    textFont(font, 15);
-    text("High Score: ", width-(healthBarWidth+130), 78); //display score in top left
-    textFont(font, 15);
-    if(newHigh){
-      fill(achievementColor);
-    }
-    text(highScore, width-(healthBarWidth+45), 78);
-    fill(255);
-  }
-  
-  fill(255);
-  textFont(font, 15);
-  text("Earth's Health: ",width-(healthBarWidth+130),42);
-  fill(52,52,52);
-  rect(width-(healthBarWidth+20),20,healthBarWidth,30);
-  fill(earthBarColor);
-  rect(width-(healthBarWidth+20),20,earthHealth,30);
-  
-  
-  if(showWarning && warningCounter < 100){
-      
-    if(moon.damageTaken >= 50){
-      fill(255);
-      textFont(font, 20);
-      text("Oh no! The Moon is in danger! Save it!", width/2-150,height/2);
-    } else if(earth.damageTaken >= 50) {
-      fill(255);
-      textFont(font, 20);
-      text("Oh no! The Earth is in danger! Save it!", width/2-150,height/2);
+  if(!gameOver){
+    newRow = highScoreTable.addRow();
+    cam.loadPixels();
+    background(bgArr[bg]);
+    bgCount++;
+    if (bgCount>=10) {
+      bg = (bg+1)%5;
+      bgCount=0;
     }
     
-    warningCounter++;
-    if(warningCounter >= 100){ 
-      showWarning = false; 
+    if (score==-1) {
+      score=0;
     }
-  } else if(showWarning == false){
-    warningCounter = 0;
-  }
-  
-  earth.drawImages();
-
-
-  if (score<30) {
-    if(levelCount[0] < 180){
-      levelCount[0]++;
-      fill(achievementColor);
-      textFont(font, 20);
-      text("Level 1: Protect the Earth! Save the Dinosaurs!", width/2-190,height/2);
+    
+    if(highScore < score){
+      highScore = score;
+      newRow.setInt("highscore",highScore);
+      saveTable(highScoreTable,"data/highscore.csv");
+      newHigh = true;
+    }
+    
+    earthHealth = ((tooMuchDamageTaken - earth.damageTaken)/100) * healthBarWidth;
+    if(drawMoon){
+      moonHealth = ((tooMuchDamageTaken - moon.damageTaken)/100) * healthBarWidth;
       fill(255);
-      obstacles.clear();
-      textDisplaying = true;
-    } else {
-      textDisplaying = false;
-    }
-    currentDiff = difficulty[0];
-  } else if (score>=30 && score <= 60) {
-    if(levelCount[1] < 180){
-      levelCount[1]++;
-      fill(achievementColor);
-      textFont(font, 20);
-      text("Level 2: The Moon is under threat! You know what to do!", width/2-240,height/2);
+      textFont(font, 15);
+      text("Moon's Health: ",width-(healthBarWidth+130),82);
+      fill(52,52,52);
+      rect(width-(healthBarWidth+20),60,healthBarWidth,30);
+      fill(moonBarColor);
+      rect(width-(healthBarWidth+20),60,moonHealth,30);
       fill(255);
-      obstacles.clear();
-      textDisplaying = true;
-    } else {
-      textDisplaying = false;
-    }
-    currentDiff = difficulty[1];
-    bgMusic.rate(1);
-    drawMoon = true;
-  } else if (score>60) {
-    if(levelCount[2] < 180){
-      levelCount[2]++;
-      fill(achievementColor);
-      textFont(font, 20);
-      text("Level 3: Now entering Chaos Mode!", width/2-150,height/2);
-      fill(255);
-      obstacles.clear();
-      textDisplaying = true;
-    } else {
-      textDisplaying = false;
-    }
-    bgMusic.rate(1.05);
-    currentDiff = difficulty[2];
-  }
-  
-  if(drawMoon){
-    moon.drawImages();
-  }
-
-  float worldRecord = 500; 
-
-  // XY coordinate of closest color
-  int closestX = 0;
-  int closestY = 0;
-
-  // Begin loop to walk through every pixel
-  for (int x = 0; x < cam.width; x ++ ) {
-    for (int y = 0; y < cam.height; y ++ ) {
-      int loc = x + y*cam.width;
-      // What is current color
-      color currentColor = cam.pixels[loc];
-      float r1 = red(currentColor);
-      float g1 = green(currentColor);
-      float b1 = blue(currentColor);
-      float r2 = red(trackColour);
-      float g2 = green(trackColour);
-      float b2 = blue(trackColour);
-
-      // Using euclidean distance to compare colors
-      float d = dist(r1, g1, b1, r2, g2, b2); // We are using the dist( ) function to compare the current color with the color we are tracking.
-
-      // If current color is more similar to tracked color than
-      // closest color, save current location and current difference
-      if (d < worldRecord) {
-        worldRecord = d;
-        closestX = x;
-        closestY = y;
+      textFont(font, 15);
+      text("Score: ", width-(healthBarWidth+130), 100); //display score in top left
+      textFont(font, 15);
+      text(score, width-(healthBarWidth+80), 100);
+      textFont(font, 15);
+      text("High Score: ", width-(healthBarWidth+130), 118); //display score in top left
+      textFont(font, 15);
+      if(newHigh){
+        fill(achievementColor);
       }
-    }
-  }
-
-  // We only consider the color found if its color distance is less than 10. 
-  // This threshold of 10 is arbitrary and you can adjust this number depending on how accurate you require the tracking to be.
-  if (worldRecord < 10) { 
-    // Draw a circle at the tracked pixel
-
-    //UNCOMMENT FOR ACTUAL PROJECT
-    //player.move(width-closestX,closestY); //move the player, the image is mirrored so flip the x value in which the player rect moves
-  }
-  
-  //FOR TESTING
-    player.move(mouseX, mouseY);
-    //player.drawRect(); //display the player
-    player.drawImg();
-
-
-  if (obstacles.isEmpty() && !textDisplaying) {
-    obstacles.add(new Asteroid());
-  }
-  
-  for (int i = 0; i<obstacles.size(); i++) { //loop through list of obstacles
-    temp = obstacles.get(i);
-    if (temp.imgSet == false) {
-      temp.setImage(asteroidArr[(int) random(0, 4)]);
-    }
-    temp.move(); //move obstacle
-
-    if (temp.collideRect(player) || earth.damageTaken >= 100 || moon.damageTaken >= 100) { //check for collision with player
-      tempExplosion = new Explosion(player.x, player.y);
-      tempExplosion.explode = explosionSound;
-      tempExplosion.startAnimating();
-      explosions.add(tempExplosion);
-      gameOver = true;
+      text(highScore, width-(healthBarWidth+45), 118);
+      fill(255);
+    } else {
+      fill(255);
+      textFont(font, 15);
+      text("Score: ", width-(healthBarWidth+130), 60); //display score in top left
+      textFont(font, 15);
+      text(score, width-(healthBarWidth+80), 60);
+      textFont(font, 15);
+      text("High Score: ", width-(healthBarWidth+130), 78); //display score in top left
+      textFont(font, 15);
+      if(newHigh){
+        fill(achievementColor);
+      }
+      text(highScore, width-(healthBarWidth+45), 78);
+      fill(255);
     }
     
-    if (!bullets.isEmpty()) {
-      for (int c = 0; c<bullets.size(); c++) {
-        tempBullet = bullets.get(c);
-        if (temp.collideRect(tempBullet)) {
-          //create a new explosion object for each collision that occurs
-          tempExplosion = new Explosion(temp.x-10, temp.y-10); //create the explosion at the point the bullet hits the object
-          tempExplosion.explode = explosionSound;
-          tempExplosion.startAnimating(); //set the shouldAnimate property of the explosion to true so that it can start animating afterwards
-          explosions.add(tempExplosion); //add each explosion to a list, they will be animated later
-          bullets.remove(tempBullet);
-          obstacles.remove(temp);
-          score++;
+    fill(255);
+    textFont(font, 15);
+    text("Earth's Health: ",width-(healthBarWidth+130),42);
+    fill(52,52,52);
+    rect(width-(healthBarWidth+20),20,healthBarWidth,30);
+    fill(earthBarColor);
+    rect(width-(healthBarWidth+20),20,earthHealth,30);
+    
+    
+    if(showWarning && warningCounter < 100){
+        
+      if(moon.damageTaken >= 50){
+        fill(255);
+        textFont(font, 20);
+        text("Oh no! The Moon is in danger! Save it!", width/2-150,height/2);
+      } else if(earth.damageTaken >= 50) {
+        fill(255);
+        textFont(font, 20);
+        text("Oh no! The Earth is in danger! Save it!", width/2-150,height/2);
+      }
+      
+      warningCounter++;
+      if(warningCounter >= 100){ 
+        showWarning = false; 
+      }
+    } else if(showWarning == false){
+      warningCounter = 0;
+    }
+    
+    earth.drawImages();
+  
+  
+    if (score<30) {
+      if(levelCount[0] < 180){
+        levelCount[0]++;
+        fill(achievementColor);
+        textFont(font, 20);
+        text("Level 1: Protect the Earth! Save the Dinosaurs!", width/2-190,height/2);
+        fill(255);
+        obstacles.clear();
+        textDisplaying = true;
+      } else {
+        textDisplaying = false;
+      }
+      currentDiff = difficulty[0];
+    } else if (score>=30 && score <= 60) {
+      if(levelCount[1] < 180){
+        levelCount[1]++;
+        fill(achievementColor);
+        textFont(font, 20);
+        text("Level 2: The Moon is under threat! You know what to do!", width/2-240,height/2);
+        fill(255);
+        obstacles.clear();
+        textDisplaying = true;
+      } else {
+        textDisplaying = false;
+      }
+      currentDiff = difficulty[1];
+      bgMusic.rate(1);
+      drawMoon = true;
+    } else if (score>60) {
+      if(levelCount[2] < 180){
+        levelCount[2]++;
+        fill(achievementColor);
+        textFont(font, 20);
+        text("Level 3: Now entering Chaos Mode!", width/2-150,height/2);
+        fill(255);
+        obstacles.clear();
+        textDisplaying = true;
+      } else {
+        textDisplaying = false;
+      }
+      bgMusic.rate(1.05);
+      currentDiff = difficulty[2];
+    }
+    
+    if(drawMoon){
+      moon.drawImages();
+    }
+  
+    float worldRecord = 500; 
+  
+    // XY coordinate of closest color
+    int closestX = 0;
+    int closestY = 0;
+  
+    // Begin loop to walk through every pixel
+    for (int x = 0; x < cam.width; x ++ ) {
+      for (int y = 0; y < cam.height; y ++ ) {
+        int loc = x + y*cam.width;
+        // What is current color
+        color currentColor = cam.pixels[loc];
+        float r1 = red(currentColor);
+        float g1 = green(currentColor);
+        float b1 = blue(currentColor);
+        float r2 = red(trackColour);
+        float g2 = green(trackColour);
+        float b2 = blue(trackColour);
+  
+        // Using euclidean distance to compare colors
+        float d = dist(r1, g1, b1, r2, g2, b2); // We are using the dist( ) function to compare the current color with the color we are tracking.
+  
+        // If current color is more similar to tracked color than
+        // closest color, save current location and current difference
+        if (d < worldRecord) {
+          worldRecord = d;
+          closestX = x;
+          closestY = y;
         }
       }
     }
-    
-    if(temp.collideRect(earth.hitBox)){
-      earth.takeDamage(temp.damage);
-      tempExplosion = new Explosion(temp.x-10,temp.y-10);
-      tempExplosion.explode = explosionSound;
-      tempExplosion.startAnimating();
-      explosions.add(tempExplosion);
-      obstacles.remove(temp);
+  
+    // We only consider the color found if its color distance is less than 10. 
+    // This threshold of 10 is arbitrary and you can adjust this number depending on how accurate you require the tracking to be.
+    if (worldRecord < 10) { 
+      // Draw a circle at the tracked pixel
+  
+      //UNCOMMENT FOR ACTUAL PROJECT
+      //player.move(width-closestX,closestY); //move the player, the image is mirrored so flip the x value in which the player rect moves
     }
     
-    if(temp.collideRect(moon.hitBox) && drawMoon){
-      moon.takeDamage((int)(temp.damage*1.5));
-      tempExplosion = new Explosion(temp.x-10,temp.y-10);
-      tempExplosion.explode = explosionSound;
-      tempExplosion.startAnimating();
-      explosions.add(tempExplosion);
-      obstacles.remove(temp);
-    }
-    
-
-    if (temp.count==currentDiff) { //if count reaches this value (i.e. has been on screen for 45 frames) add a new obstacle
+    //FOR TESTING
+      player.move(mouseX, mouseY);
+      //player.drawRect(); //display the player
+      player.drawImg();
+  
+  
+    if (obstacles.isEmpty() && !textDisplaying) {
       obstacles.add(new Asteroid());
     }
-
-    if (temp.y>height) { //if obstacle is off screen remove it from obstacle list
-      obstacles.remove(i);
-    }
-    temp.drawImg(); //draw the obstacle
-  }
+    
+    for (int i = 0; i<obstacles.size(); i++) { //loop through list of obstacles
+      temp = obstacles.get(i);
+      if (temp.imgSet == false) {
+        temp.setImage(asteroidArr[(int) random(0, 4)]);
+      }
+      temp.move(); //move obstacle
   
-  if(earth.damageTaken >= 50){
-      earthBarColor = dangerColor;
-      showWarning = true;
-  }
+      if (temp.collideRect(player) || earth.damageTaken >= 100 || moon.damageTaken >= 100) { //check for collision with player
+        tempExplosion = new Explosion(player.x, player.y);
+        tempExplosion.explode = explosionSound;
+        tempExplosion.startAnimating();
+        explosions.add(tempExplosion);
+        gameOver = true;
+      }
+      
+      if (!bullets.isEmpty()) {
+        for (int c = 0; c<bullets.size(); c++) {
+          tempBullet = bullets.get(c);
+          if (temp.collideRect(tempBullet)) {
+            //create a new explosion object for each collision that occurs
+            tempExplosion = new Explosion(temp.x-10, temp.y-10); //create the explosion at the point the bullet hits the object
+            tempExplosion.explode = explosionSound;
+            tempExplosion.startAnimating(); //set the shouldAnimate property of the explosion to true so that it can start animating afterwards
+            explosions.add(tempExplosion); //add each explosion to a list, they will be animated later
+            bullets.remove(tempBullet);
+            obstacles.remove(temp);
+            score++;
+          }
+        }
+      }
+      
+      if(temp.collideRect(earth.hitBox)){
+        earth.takeDamage(temp.damage);
+        tempExplosion = new Explosion(temp.x-10,temp.y-10);
+        tempExplosion.explode = explosionSound;
+        tempExplosion.startAnimating();
+        explosions.add(tempExplosion);
+        obstacles.remove(temp);
+      }
+      
+      if(temp.collideRect(moon.hitBox) && drawMoon){
+        moon.takeDamage((int)(temp.damage*1.5));
+        tempExplosion = new Explosion(temp.x-10,temp.y-10);
+        tempExplosion.explode = explosionSound;
+        tempExplosion.startAnimating();
+        explosions.add(tempExplosion);
+        obstacles.remove(temp);
+      }
+      
   
-  if(moon.damageTaken >= 50){
-      moonBarColor = dangerColor;
-      showWarning = true;
-  }
-
-  //animate all the explosions that were added to the explosions list
-  for (int i=0; i<explosions.size(); i++) {
-    tempExplosion = explosions.get(i);
-    tempExplosion.animate();
-  }
-
-  if (mousePressed) {
-    if (alreadyShot == false) {
-      // UNCOMMENT FOR PRODUCTION
-      //bullets.add(new Bullet(width-closestX, closestY-25));
-
-      //TESTING
-      bullets.add(new Bullet(mouseX, mouseY-25));
-      laser.play();
-      alreadyShot = true;
+      if (temp.count==currentDiff) { //if count reaches this value (i.e. has been on screen for 45 frames) add a new obstacle
+        obstacles.add(new Asteroid());
+      }
+  
+      if (temp.y>height) { //if obstacle is off screen remove it from obstacle list
+        obstacles.remove(i);
+      }
+      temp.drawImg(); //draw the obstacle
     }
-  }  
-
-  if (!bullets.isEmpty()) {
-    for (int i=0; i<bullets.size(); i++) {
-      tempBullet = bullets.get(i);
-      tempBullet.setImage(bulletImg);
-      tempBullet.move();
-      tempBullet.drawImg();
-
-      if (tempBullet.y<0) {
-        bullets.remove(tempBullet);
+    
+    if(earth.damageTaken >= 50){
+        earthBarColor = dangerColor;
+        showWarning = true;
+    }
+    
+    if(moon.damageTaken >= 50){
+        moonBarColor = dangerColor;
+        showWarning = true;
+    }
+  
+    //animate all the explosions that were added to the explosions list
+    for (int i=0; i<explosions.size(); i++) {
+      tempExplosion = explosions.get(i);
+      tempExplosion.animate();
+    }
+  
+    if (mousePressed) {
+      if (alreadyShot == false) {
+        // UNCOMMENT FOR PRODUCTION
+        //bullets.add(new Bullet(width-closestX, closestY-25));
+  
+        //TESTING
+        bullets.add(new Bullet(mouseX, mouseY-25));
+        laser.play();
+        alreadyShot = true;
+      }
+    }  
+  
+    if (!bullets.isEmpty()) {
+      for (int i=0; i<bullets.size(); i++) {
+        tempBullet = bullets.get(i);
+        tempBullet.setImage(bulletImg);
+        tempBullet.move();
+        tempBullet.drawImg();
+  
+        if (tempBullet.y<0) {
+          bullets.remove(tempBullet);
+        }
       }
     }
   }
-
-
   if (gameOver == true) { //if a collision happened
     bgMusic.rate(0.95);
     levelCount[0] = 0;
