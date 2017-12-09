@@ -514,16 +514,13 @@ void draw() {
     // We only consider the color found if its color distance is less than 10. 
     // This threshold of 10 is arbitrary and you can adjust this number depending on how accurate you require the tracking to be.
     if (worldRecord < 10) { 
-      // Draw a circle at the tracked pixel
-  
-      //UNCOMMENT FOR ACTUAL PROJECT
       player.move(width-closestX,closestY); //move the player, the image is mirrored so flip the x value in which the player rect moves
     }
     
-    //FOR TESTING
-      //player.move(mouseX, mouseY);
-      ////player.drawRect(); //display the player
-      //player.drawImg();
+    //UNCOMMENT IF BUTTON BREAKS
+    //player.move(mouseX,mouseY);
+    
+    player.drawImg();
   
   
     if (obstacles.isEmpty() && !textDisplaying) {
@@ -718,14 +715,14 @@ void draw() {
       bigNiggaCounter = 0;
     }
     
-  
+    //UNCOMMENT IF BUTTON BREAKS
     //if (mousePressed) {
     //  if (alreadyShot == false) {
     //    // UNCOMMENT FOR PRODUCTION
     //    //bullets.add(new Bullet(width-closestX, closestY-25));
   
     //    //TESTING
-    //    bullets.add(new Bullet(mouseX, mouseY-25));
+    //    bullets.add(new Bullet(player.x, player.y-25));
     //    laser.play();
     //    alreadyShot = true;
     //  }
