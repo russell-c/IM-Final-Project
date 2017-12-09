@@ -162,7 +162,7 @@ class Bullet extends Rect {
 }
 
 class Explosion {
-  int x = 0, y = 0, frame = 0, explosionIndex = 0;
+  int x = 0, y = 0, w = 40, h = 40, frame = 0, explosionIndex = 0;
   PImage[] explosionSet = new PImage[8];
   boolean shouldAnimate = false;
   SoundFile explode;
@@ -193,7 +193,7 @@ class Explosion {
   void animate(){
     if(shouldAnimate){
       if((frame%3)==0){ //every 2 frames in processing draw a new frame of the explosion gif
-        image(this.explosionSet[explosionIndex],this.x,this.y,40,40);
+        image(this.explosionSet[explosionIndex],this.x,this.y,w,h);
         explosionIndex++;
       }
       frame++;
@@ -204,22 +204,43 @@ class Explosion {
   }
 }
 
+class LargeAsteroid extends Asteroid {
+  int hitsTaken = 0;
+  boolean shouldExplode = false;
+  
+  LargeAsteroid(){
+    this.velocity = 1;
+    this.w = 60;
+    this.h = 60;
+    this.damage = (int)(0.67*this.w);
+  }
+  
+  void takeHit(){
+    this.hitsTaken++;
+    if(this.hitsTaken >= 3){
+      this.shouldExplode = true;
+    }
+  }
+}
+
 ArrayList<Asteroid> obstacles = new ArrayList<Asteroid>();
 ArrayList<Bullet> bullets = new ArrayList<Bullet>();
 ArrayList<Bullet> bigBullets = new ArrayList<Bullet>();
 ArrayList<Explosion> explosions = new ArrayList<Explosion>();
+ArrayList<LargeAsteroid> largeAsteroids = new ArrayList<LargeAsteroid>();
 Player player = new Player(width/2, height, 35, 35);
 Asteroid temp; 
 Bullet tempBullet;
 Explosion tempExplosion;
+LargeAsteroid tempLargeAsteroid;
 StellarObject earth = new StellarObject(320,263,75, 333, 40, 0);
 StellarObject moon = new StellarObject(80,80,width/2+375, 253, 25, 1);
 
-boolean gameOver = false, alreadyShot, showWarning = false, drawMoon = false, newHigh = false, textDisplaying = false;
-int x, y, score = -1, currentDiff, highScore = -1, bigNiggaCounter = 0;
-int[] difficulty = {45, 30, 15}, warningCounter = {0, 0};
+boolean gameOver = false, alreadyShot, showWarning = false, drawMoon = false, newHigh = false, textDisplaying = false, makeLargeAsteroid = false;
+int x, y, score = -1, currentDiff, highScore = -1, bigNiggaCounter = 0, largeAsteroidFrameCount = -1;
+int[] difficulty = {50, 35, 25}, warningCounter = {0, 0};
 color trackColour;
-PImage spaceshipImg, bulletImg;
+PImage spaceshipImg, bulletImg, bigBulletImg, largeAsteroidImg;
 PImage[] earthImages = new PImage[40], moonImages = new PImage[25];
 PImage[] bgArr = new PImage[5];
 PImage[] asteroidArr = new PImage[4];
@@ -244,6 +265,9 @@ void setup() {
   trackColour = color(255, 255, 255);
    
   bulletImg = loadImage("missile.png");
+  bigBulletImg = loadImage("largemissile.png");
+  largeAsteroidImg = loadImage("largeAsteroid.png");
+  
   spaceshipImg = loadImage("xwing.png"); //load the spaceship image
   player.setImage(spaceshipImg); //attach it to the player object 
  
@@ -399,7 +423,6 @@ void draw() {
     
     earth.drawImages();
   
-  
     if (score<30) {
       if(levelCount[0] < 180){
         levelCount[0]++;
@@ -436,12 +459,17 @@ void draw() {
         text("Level 3: Now entering Chaos Mode!", width/2-150,height/2);
         fill(255);
         obstacles.clear();
+        largeAsteroids.clear();
         textDisplaying = true;
       } else {
         textDisplaying = false;
       }
       bgMusic.rate(1.05);
       currentDiff = difficulty[2];
+      if(largeAsteroidFrameCount == -1){
+        makeLargeAsteroid = true;
+      }
+      
     }
     
     if(drawMoon){
@@ -497,6 +525,90 @@ void draw() {
   
     if (obstacles.isEmpty() && !textDisplaying) {
       obstacles.add(new Asteroid());
+    }
+    
+    if(makeLargeAsteroid){
+      largeAsteroidFrameCount++;
+      if(largeAsteroidFrameCount >= 400){
+        tempLargeAsteroid = new LargeAsteroid();
+        tempLargeAsteroid.setImage(largeAsteroidImg);
+        largeAsteroids.add(tempLargeAsteroid);
+        largeAsteroidFrameCount = 0;
+        makeLargeAsteroid = true;
+      }
+    }
+    
+    for(int i=0;i<largeAsteroids.size();i++){
+      tempLargeAsteroid = largeAsteroids.get(i);
+      if(!tempLargeAsteroid.imgSet){
+        temp.setImage(largeAsteroidImg);
+      }
+      
+      tempLargeAsteroid.move();
+      if (tempLargeAsteroid.collideRect(player) || earth.damageTaken >= 100 || moon.damageTaken >= 100) { //check for collision with player
+        tempExplosion = new Explosion(player.x, player.y);
+        tempExplosion.explode = explosionSound;
+        tempExplosion.startAnimating();
+        explosions.add(tempExplosion);
+        gameOver = true;
+      }
+      for(int j = 0;j<bullets.size();j++){
+        tempBullet = bullets.get(j);
+        if(tempLargeAsteroid.collideRect(tempBullet)){
+          tempLargeAsteroid.takeHit();
+          tempExplosion = new Explosion(tempBullet.x, tempBullet.y);
+          tempExplosion.h = tempExplosion.w = 20;
+          tempExplosion.explode = explosionSound;
+          tempExplosion.startAnimating();
+          score++;
+          explosions.add(tempExplosion);
+          if(tempLargeAsteroid.shouldExplode){
+            tempExplosion = new Explosion(tempBullet.x, tempBullet.y);
+            tempExplosion.h = tempExplosion.w = 50;
+            tempExplosion.explode = explosionSound;
+            tempExplosion.startAnimating();
+            explosions.add(tempExplosion);
+            largeAsteroids.remove(tempLargeAsteroid);
+            score+=2;
+          }
+          bullets.remove(tempBullet);
+        }
+      }
+      
+      for(int h = 0;h<bigBullets.size();h++){
+        tempBullet = bigBullets.get(h);
+        if(tempLargeAsteroid.collideRect(tempBullet)){
+          tempExplosion = new Explosion(tempBullet.x, tempBullet.y);
+          tempExplosion.h = tempExplosion.w = 50;
+          tempExplosion.explode = explosionSound;
+          tempExplosion.startAnimating();
+          explosions.add(tempExplosion);
+          largeAsteroids.remove(tempLargeAsteroid);
+          bigBullets.remove(tempBullet);
+        }
+       }
+       
+       if(tempLargeAsteroid.collideRect(earth.hitBox)){
+          earth.takeDamage(tempLargeAsteroid.damage);
+          tempExplosion = new Explosion(temp.x-10,temp.y-10);
+          tempExplosion.explode = explosionSound;
+          tempExplosion.startAnimating();
+          explosions.add(tempExplosion);
+          largeAsteroids.remove(tempLargeAsteroid);
+       }
+      
+       if(tempLargeAsteroid.collideRect(moon.hitBox) && drawMoon){
+          moon.takeDamage((int)(tempLargeAsteroid.damage));
+          tempExplosion = new Explosion(temp.x-10,temp.y-10);
+          tempExplosion.explode = explosionSound;
+          tempExplosion.startAnimating();
+          explosions.add(tempExplosion);
+          largeAsteroids.remove(tempLargeAsteroid);
+       } 
+       tempLargeAsteroid.drawImg();
+       if(tempLargeAsteroid.y > height){
+         largeAsteroids.remove(tempLargeAsteroid);
+       }
     }
     
     for (int i = 0; i<obstacles.size(); i++) { //loop through list of obstacles
@@ -595,12 +707,14 @@ void draw() {
     
     if(bigNiggaCounter >= 5){
       tempBullet = new Bullet(mouseX, mouseY-25);
-      tempBullet.h = 100;
-      tempBullet.w = 100;
+      tempBullet.setImage(bigBulletImg);
+      tempBullet.h = 50;
+      tempBullet.w = 50;
       tempBullet.velocity = 3;
       bigBullets.add(tempBullet);
       bigNiggaCounter = 0;
     }
+    
   
     if (mousePressed) {
       if (alreadyShot == false) {
@@ -630,7 +744,6 @@ void draw() {
     if (!bigBullets.isEmpty()){
       for(int i = 0; i < bigBullets.size(); i++){
         tempBullet = bigBullets.get(i);
-        tempBullet.setImage(bulletImg);
         tempBullet.move();
         tempBullet.drawImg();
         
@@ -645,6 +758,7 @@ void draw() {
     levelCount[0] = 0;
     levelCount[1] = 0;
     levelCount[2] = 0;
+    largeAsteroidFrameCount = -1;
     drawMoon = false;
     earthBarColor = healthyColor;
     moonBarColor = healthyColor;
@@ -657,6 +771,7 @@ void draw() {
     bullets.clear();
     explosions.clear();
     bigBullets.clear();
+    largeAsteroids.clear();
     background(bgArr[bg]);
     fill(255);
     textFont(font, 26);
