@@ -215,7 +215,7 @@ StellarObject earth = new StellarObject(320,263,75, 333, 40, 0);
 StellarObject moon = new StellarObject(80,80,width/2+375, 253, 25, 1);
 
 boolean gameOver = false, alreadyShot, showWarning = false, drawMoon = false, newHigh = false;
-int x, y, score = -1, currentDiff, warningCounter = 0, highScore = 0;
+int x, y, score = -1, currentDiff, warningCounter = 0, highScore = -1;
 int[] difficulty = {45, 30, 15};
 color trackColour;
 PImage spaceshipImg, bulletImg;
@@ -230,6 +230,7 @@ float healthBarWidth = 200, tooMuchDamageTaken = 100;
 float earthHealth = 0, moonHealth = 0;
 int bg = 0, bgCount = 0;
 SoundFile explosionSound, bgMusic, laser;
+Table highScoreTable;
 Capture cam;
 
 void setup() {
@@ -280,18 +281,29 @@ void setup() {
   
   bgMusic = new SoundFile(this, "bgSong.wav");
   bgMusic.amp(0.5); //sets the volume, accepts values between 0 and 1
+  bgMusic.rate(0.95);
   bgMusic.loop();
   
   laser = new SoundFile(this, "laser.wav");
   font = loadFont("HelveticaNeue-48.vlw");
+  
+  //save to CSV table that keeps the highscore
+  highScoreTable = loadTable("highscore.csv","header");
+  for(TableRow row : highScoreTable.rows()){
+    highScore = row.getInt("highscore");
+  }
+  
 }
 
 void captureEvent(Capture cam) {
   cam.read();
 }
 
+boolean setGreeting = true;
+TableRow newRow;
 void draw() {
   
+  newRow = highScoreTable.addRow();
   cam.loadPixels();
   background(bgArr[bg]);
   bgCount++;
@@ -306,11 +318,49 @@ void draw() {
   
   if(highScore < score){
     highScore = score;
+    newRow.setInt("highscore",highScore);
+    saveTable(highScoreTable,"data/highscore.csv");
     newHigh = true;
   }
   
   earthHealth = ((tooMuchDamageTaken - earth.damageTaken)/100) * healthBarWidth;
-  moonHealth = ((tooMuchDamageTaken - moon.damageTaken)/100) * healthBarWidth;
+  if(drawMoon){
+    moonHealth = ((tooMuchDamageTaken - moon.damageTaken)/100) * healthBarWidth;
+    fill(255);
+    textFont(font, 15);
+    text("Moon's Health: ",width-(healthBarWidth+130),82);
+    fill(52,52,52);
+    rect(width-(healthBarWidth+20),60,healthBarWidth,30);
+    fill(moonBarColor);
+    rect(width-(healthBarWidth+20),60,moonHealth,30);
+    fill(255);
+    textFont(font, 15);
+    text("Score: ", width-(healthBarWidth+130), 100); //display score in top left
+    textFont(font, 15);
+    text(score, width-(healthBarWidth+80), 100);
+    textFont(font, 15);
+    text("High Score: ", width-(healthBarWidth+130), 118); //display score in top left
+    textFont(font, 15);
+    if(newHigh){
+      fill(achievementColor);
+    }
+    text(highScore, width-(healthBarWidth+45), 118);
+    fill(255);
+  } else {
+    fill(255);
+    textFont(font, 15);
+    text("Score: ", width-(healthBarWidth+130), 60); //display score in top left
+    textFont(font, 15);
+    text(score, width-(healthBarWidth+80), 60);
+    textFont(font, 15);
+    text("High Score: ", width-(healthBarWidth+130), 78); //display score in top left
+    textFont(font, 15);
+    if(newHigh){
+      fill(achievementColor);
+    }
+    text(highScore, width-(healthBarWidth+45), 78);
+    fill(255);
+  }
   
   fill(255);
   textFont(font, 15);
@@ -319,26 +369,7 @@ void draw() {
   rect(width-(healthBarWidth+20),20,healthBarWidth,30);
   fill(earthBarColor);
   rect(width-(healthBarWidth+20),20,earthHealth,30);
-  fill(255);
-  textFont(font, 15);
-  text("Moon's Health: ",width-(healthBarWidth+130),82);
-  fill(52,52,52);
-  rect(width-(healthBarWidth+20),60,healthBarWidth,30);
-  fill(moonBarColor);
-  rect(width-(healthBarWidth+20),60,moonHealth,30);
-  fill(255);
-  textFont(font, 15);
-  text("Score: ", width-(healthBarWidth+130), 100); //display score in top left
-  textFont(font, 15);
-  text(score, width-(healthBarWidth+80), 100);
-  textFont(font, 15);
-  text("High Score: ", width-(healthBarWidth+130), 118); //display score in top left
-  textFont(font, 15);
-  if(newHigh){
-    fill(achievementColor);
-  }
-  text(highScore, width-(healthBarWidth+45), 118);
-  fill(255);
+  
   
   if(showWarning && warningCounter < 100){
       
@@ -364,11 +395,12 @@ void draw() {
 
   if (score<60) {
     currentDiff = difficulty[0];
-    drawMoon = true;
-  } else if (score>60 && score < 120) {
+  } else if (score>=60 && score <= 120) {
     currentDiff = difficulty[1];
+    bgMusic.rate(1);
     drawMoon = true;
   } else if (score>120) {
+    bgMusic.rate(1.05);
     currentDiff = difficulty[2];
   }
   
@@ -529,6 +561,7 @@ void draw() {
 
 
   if (gameOver == true) { //if a collision happened
+    bgMusic.rate(0.95);
     drawMoon = false;
     earthBarColor = healthyColor;
     moonBarColor = healthyColor;
@@ -560,8 +593,6 @@ void draw() {
       fill(255);
     }
     
-    
-   
     text("Push ", width/2-120, height/2+76); 
     fill(healthyColor);
     text("ENTER ",width/2-80, height/2+76);
