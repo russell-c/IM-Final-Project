@@ -1,6 +1,6 @@
+import processing.serial.*;
 import processing.video.*;
 import processing.sound.*;
-
 
 class Rect {  //constructing a class for the player and obstacle objects
   int x;
@@ -234,9 +234,12 @@ int[] levelCount = {0, 0, 0};
 SoundFile explosionSound, bgMusic, laser;
 Table highScoreTable;
 Capture cam;
+Serial port;
 
 void setup() {
   size(640, 480);
+  port = new Serial(this, Serial.list()[5], 9600);
+  port.bufferUntil('\n');
   cam = new Capture(this, width, height);
   cam.start();
   background(255);
@@ -486,13 +489,13 @@ void draw() {
       // Draw a circle at the tracked pixel
   
       //UNCOMMENT FOR ACTUAL PROJECT
-      //player.move(width-closestX,closestY); //move the player, the image is mirrored so flip the x value in which the player rect moves
+      player.move(width-closestX,closestY); //move the player, the image is mirrored so flip the x value in which the player rect moves
     }
     
     //FOR TESTING
-      player.move(mouseX, mouseY);
-      //player.drawRect(); //display the player
-      player.drawImg();
+      //player.move(mouseX, mouseY);
+      ////player.drawRect(); //display the player
+      //player.drawImg();
   
   
     if (obstacles.isEmpty() && !textDisplaying) {
@@ -602,17 +605,17 @@ void draw() {
       bigNiggaCounter = 0;
     }
   
-    if (mousePressed) {
-      if (alreadyShot == false) {
-        // UNCOMMENT FOR PRODUCTION
-        //bullets.add(new Bullet(width-closestX, closestY-25));
+    //if (mousePressed) {
+    //  if (alreadyShot == false) {
+    //    // UNCOMMENT FOR PRODUCTION
+    //    //bullets.add(new Bullet(width-closestX, closestY-25));
   
-        //TESTING
-        bullets.add(new Bullet(mouseX, mouseY-25));
-        laser.play();
-        alreadyShot = true;
-      }
-    }  
+    //    //TESTING
+    //    bullets.add(new Bullet(mouseX, mouseY-25));
+    //    laser.play();
+    //    alreadyShot = true;
+    //  }
+    //}  
   
     if (!bullets.isEmpty()) {
       for (int i=0; i<bullets.size(); i++) {
@@ -699,4 +702,20 @@ void keyPressed() {
 
 void mouseReleased() {
   alreadyShot = false;
+}
+
+void serialEvent (Serial port){
+  String inByte = port.readStringUntil('\n');
+  inByte = trim(inByte);
+  if(inByte.equals("1")){
+    if(!gameOver){
+      bullets.add(new Bullet(player.x, player.y-25));
+      laser.play();
+    } else {
+      score = 0; //reset score
+      obstacles.add(new Asteroid()); //reinitialise obstacles list
+      gameOver = false;
+      newHigh = false;
+    }
+  }
 }
